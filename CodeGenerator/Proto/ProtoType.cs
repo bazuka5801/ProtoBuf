@@ -45,7 +45,13 @@ namespace SilentOrbit.ProtocolBuffers
 
         public virtual string FullCsType
         {
-            get { return CsNamespace + "." + CsType; }
+            get 
+			{
+				if ( CsNamespace == "global" )
+					return CsNamespace + "::" + CsType;
+
+				return CsNamespace + "." + CsType; 
+			}
         }
 
         /// <summary>
@@ -93,6 +99,11 @@ namespace SilentOrbit.ProtocolBuffers
         /// Can be "class", "struct" or "interface"
         /// </summary>
         public string OptionType { get; set; }
+
+		/// <summary>
+		/// This classes base class
+		/// </summary>
+		public string OptionBase { get; set; }
 
         /// <summary>
         /// Initial capacity of allocated MemoryStream when Serializing this object.

@@ -49,8 +49,16 @@ then write the code and the changes in a separate file.");
                     {
                         if (ns != null) //First time
                             cw.EndBracket();
-                        cw.Bracket("namespace " + m.CsNamespace);
-                        ns = m.CsNamespace;
+
+						if ( m.CsNamespace == "global" )
+						{
+							ns = null;
+						}
+						else
+						{
+							cw.Bracket( "namespace " + m.CsNamespace );
+							ns = m.CsNamespace;
+						}
                     }
                     MessageCode.GenerateClass(m, cw, options);
                     cw.WriteLine();
@@ -69,7 +77,8 @@ then write the code and the changes in a separate file.");
                     cw.WriteLine();
                 }
 
-                cw.EndBracket();
+				if ( ns != null )
+					cw.EndBracket();
             }
 
             //.Serializer.cs
@@ -98,12 +107,22 @@ This file will be overwritten when CodeGenerator is run.");
                     {
                         if (ns != null) //First time
                             cw.EndBracket();
-                        cw.Bracket("namespace " + m.CsNamespace);
-                        ns = m.CsNamespace;
+
+						if ( m.CsNamespace == "global" )
+						{
+							ns = null;
+						}
+						else
+						{
+							cw.Bracket( "namespace " + m.CsNamespace );
+							ns = m.CsNamespace;
+						}
                     }
                     MessageSerializer.GenerateClassSerializer(m, cw);
                 }
-                cw.EndBracket();
+
+				if ( ns != null )
+					cw.EndBracket();
             }
 
             string libPath = Path.Combine(Path.GetDirectoryName(csPath), "ProtocolParser.cs");
