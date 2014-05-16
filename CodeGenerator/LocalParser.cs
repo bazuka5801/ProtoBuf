@@ -21,6 +21,9 @@ namespace SilentOrbit.ProtocolBuffers
                 case "external":
                     message.OptionExternal = true;				
                     break;
+				case "nopartials":
+					message.OptionNoPartials = true;
+					break;
                 default:
                     throw new NotImplementedException("Unknown option: " + flag);
             }

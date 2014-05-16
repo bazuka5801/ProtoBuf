@@ -28,7 +28,7 @@ namespace SilentOrbit.ProtocolBuffers
         {
             get
             {
-				if ( this.OptionType == "interface" )
+				if ( this.OptionType == "interface" || this.OptionNoPartials )
 				{
 					return CsType + "Serialized";
 				}
@@ -43,7 +43,7 @@ namespace SilentOrbit.ProtocolBuffers
         {
             get
             {
-				if ( this.OptionType == "interface" )
+				if ( this.OptionType == "interface" || this.OptionNoPartials )
 				{
 					return FullCsType + "Serialized";
 				}

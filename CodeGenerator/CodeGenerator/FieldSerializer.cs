@@ -396,7 +396,7 @@ namespace SilentOrbit.ProtocolBuffers
                 case ProtoBuiltin.Int64:
                     return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt64(" + stream + ",(ulong)" + instance + ");";
                 case ProtoBuiltin.UInt32:
-                    return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(" + stream + ", " + instance + ");";
+                    return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(" + stream + ",(uint)" + instance + ");";
                 case ProtoBuiltin.UInt64:
                     return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt64(" + stream + ", " + instance + ");";
                 case ProtoBuiltin.SInt32:

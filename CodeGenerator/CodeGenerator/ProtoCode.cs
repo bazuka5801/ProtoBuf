@@ -100,7 +100,10 @@ This file will be overwritten when CodeGenerator is run.");
                 cw.WriteLine("using System.Collections.Generic;");
                 cw.WriteLine();
 
-                string ns = null; //avoid writing namespace between classes if they belong to the same
+				cw.WriteLine( "#pragma warning disable 0472, 0162" );
+				cw.WriteLine();
+
+				string ns = null; //avoid writing namespace between classes if they belong to the same
                 foreach (ProtoMessage m in file.Messages.Values)
                 {
                     if (ns != m.CsNamespace)

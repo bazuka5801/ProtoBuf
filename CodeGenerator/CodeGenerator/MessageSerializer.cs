@@ -43,7 +43,7 @@ namespace SilentOrbit.ProtocolBuffers
 		{
 			#region Helper Deserialize Methods
 			string refstr = (m.OptionType == "struct") ? "ref " : "";
-			if (m.OptionType != "interface")
+			if ( m.OptionType != "interface" && !m.OptionNoPartials )
 			{
 				cw.Summary( "Load this value from a proto buffer" );
 				cw.Bracket( m.OptionAccess + " void FromProto(Stream stream)" );
@@ -294,11 +294,16 @@ namespace SilentOrbit.ProtocolBuffers
 			cw.EndBracket();
 			cw.WriteLine();
 
-			if ( m.OptionType != "interface" )
+			if ( m.OptionType != "interface" && !m.OptionNoPartials )
 			{
 				cw.Summary( "Serialize and return data as a byte array (use this sparingly)" );
 				cw.Bracket( m.OptionAccess + " byte[] ToProtoBytes()" );
 				cw.WriteLine( "return SerializeToBytes( this );" );
+				cw.EndBracketSpace();
+
+				cw.Summary( "Serialize to a Stream" );
+				cw.Bracket( m.OptionAccess + " void ToProto( Stream stream )" );
+				cw.WriteLine( "Serialize( stream, this );" );
 				cw.EndBracketSpace();
 			}
 
