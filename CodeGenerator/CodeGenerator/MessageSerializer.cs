@@ -45,39 +45,43 @@ namespace SilentOrbit.ProtocolBuffers
 			string refstr = (m.OptionType == "struct") ? "ref " : "";
 			if ( m.OptionType != "interface" && !m.OptionNoPartials )
 			{
+				if ( !m.OptionNoInstancing )
+				{
+					cw.Summary( "Helper: create a new instance to deserializing into" );
+					cw.Bracket( m.OptionAccess + " static " + m.CsType + " Deserialize(Stream stream)" );
+					cw.WriteLine( m.CsType + " instance = new " + m.CsType + "();" );
+					cw.WriteLine( "Deserialize(stream, " + refstr + "instance);" );
+					cw.WriteLine( "return instance;" );
+					cw.EndBracketSpace();
+
+					cw.Summary( "Helper: create a new instance to deserializing into" );
+					cw.Bracket( m.OptionAccess + " static " + m.CsType + " DeserializeLengthDelimited(Stream stream)" );
+					cw.WriteLine( m.CsType + " instance = new " + m.CsType + "();" );
+					cw.WriteLine( "DeserializeLengthDelimited(stream, " + refstr + "instance);" );
+					cw.WriteLine( "return instance;" );
+					cw.EndBracketSpace();
+
+					cw.Summary( "Helper: create a new instance to deserializing into" );
+					cw.Bracket( m.OptionAccess + " static " + m.CsType + " DeserializeLength(Stream stream, int length)" );
+					cw.WriteLine( m.CsType + " instance = new " + m.CsType + "();" );
+					cw.WriteLine( "DeserializeLength(stream, length, " + refstr + "instance);" );
+					cw.WriteLine( "return instance;" );
+					cw.EndBracketSpace();
+
+					cw.Summary( "Helper: put the buffer into a MemoryStream and create a new instance to deserializing into" );
+					cw.Bracket( m.OptionAccess + " static " + m.CsType + " Deserialize(byte[] buffer)" );
+					cw.WriteLine( m.CsType + " instance = new " + m.CsType + "();" );
+					cw.WriteLine( "using (var ms = new MemoryStream(buffer))" );
+					cw.WriteIndent( "Deserialize(ms, " + refstr + "instance);" );
+					cw.WriteLine( "return instance;" );
+					cw.EndBracketSpace();
+				}
+
 				cw.Summary( "Load this value from a proto buffer" );
 				cw.Bracket( m.OptionAccess + " void FromProto(Stream stream)" );
 				cw.WriteLine( "Deserialize(stream, this );" );
 				cw.EndBracketSpace();
 
-				cw.Summary("Helper: create a new instance to deserializing into");
-				cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(Stream stream)");
-				cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-				cw.WriteLine("Deserialize(stream, " + refstr + "instance);");
-				cw.WriteLine("return instance;");
-				cw.EndBracketSpace();
-
-				cw.Summary("Helper: create a new instance to deserializing into");
-				cw.Bracket(m.OptionAccess + " static " + m.CsType + " DeserializeLengthDelimited(Stream stream)");
-				cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-				cw.WriteLine("DeserializeLengthDelimited(stream, " + refstr + "instance);");
-				cw.WriteLine("return instance;");
-				cw.EndBracketSpace();
-
-				cw.Summary("Helper: create a new instance to deserializing into");
-				cw.Bracket(m.OptionAccess + " static " + m.CsType + " DeserializeLength(Stream stream, int length)");
-				cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-				cw.WriteLine("DeserializeLength(stream, length, " + refstr + "instance);");
-				cw.WriteLine("return instance;");
-				cw.EndBracketSpace();
-
-				cw.Summary("Helper: put the buffer into a MemoryStream and create a new instance to deserializing into");
-				cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(byte[] buffer)");
-				cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-				cw.WriteLine("using (var ms = new MemoryStream(buffer))");
-				cw.WriteIndent("Deserialize(ms, " + refstr + "instance);");
-				cw.WriteLine("return instance;");
-				cw.EndBracketSpace();
 			}
 
 			cw.Summary("Helper: put the buffer into a MemoryStream before deserializing");

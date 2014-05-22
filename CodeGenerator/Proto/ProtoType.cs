@@ -100,6 +100,12 @@ namespace SilentOrbit.ProtocolBuffers
 		/// </summary>
 		public bool OptionNoPartials { get; set; }
 
+		/// <summary>
+		/// Don't create new instances of this class
+		/// </summary>
+		public bool OptionNoInstancing { get; set; }
+		
+
         /// <summary>
         /// Can be "class", "struct" or "interface"
         /// </summary>
@@ -141,6 +147,7 @@ namespace SilentOrbit.ProtocolBuffers
             this.OptionPreserveUnknown = false;
             this.OptionExternal = false;
 			this.OptionNoPartials = false;
+			this.OptionNoInstancing = false;
             this.OptionType = null;
         }
 
