@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+#if NET_4_0
 using System.Collections.Concurrent;
+#endif
 
 /// <summary>
 /// MemoryStream management
@@ -112,6 +114,7 @@ namespace SilentOrbit.ProtocolBuffers
         }
     }
 
+#if NET_4_0
     public class ConcurrentBagStack : MemoryStreamStack
     {
         ConcurrentBag<MemoryStream> bag = new ConcurrentBag<MemoryStream>();
@@ -141,6 +144,7 @@ namespace SilentOrbit.ProtocolBuffers
             throw new ApplicationException("ConcurrentBagStack.Dispose() should not be called.");
         }
     }
+#endif
 
     public static partial class ProtocolParser
     {

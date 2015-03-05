@@ -2,7 +2,10 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+
+#if NET_4_0
 using System.Collections.Concurrent;
+#endif
 
 // 
 //  Read/Write string and byte arrays 

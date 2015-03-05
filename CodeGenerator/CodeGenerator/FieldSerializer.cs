@@ -69,17 +69,17 @@ namespace SilentOrbit.ProtocolBuffers
                 {
                     if ( f.ProtoType.OptionType == "struct")
                     {
-						if ( f.OptionUseReferences )
-						{
-							cw.WriteLine( FieldReaderType( f, "stream", "br", "ref instance." + f.CsName ) + ";" );
-						}
-						else
-						{
-							cw.WriteLine( "{" );
-							cw.WriteIndent( "var a = instance." + f.CsName + ";" );
-							cw.WriteIndent( "instance." + f.CsName + " = " + FieldReaderType( f, "stream", "br", "ref a" ) + ";" );
-							cw.WriteLine( "}" );
-						}
+                        if ( f.OptionUseReferences )
+                        {
+                            cw.WriteLine( FieldReaderType( f, "stream", "br", "ref instance." + f.CsName ) + ";" );
+                        }
+                        else
+                        {
+                            cw.WriteLine( "{" );
+                            cw.WriteIndent( "var a = instance." + f.CsName + ";" );
+                            cw.WriteIndent( "instance." + f.CsName + " = " + FieldReaderType( f, "stream", "br", "ref a" ) + ";" );
+                            cw.WriteLine( "}" );
+                        }
                         
                         return true;
                     }

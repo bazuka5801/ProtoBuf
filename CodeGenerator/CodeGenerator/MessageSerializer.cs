@@ -18,15 +18,15 @@ namespace SilentOrbit.ProtocolBuffers
 
         public void GenerateClassSerializer(ProtoMessage m)
         {
+            var baseclass = m.BaseClass;
+
+            if (baseclass != null)
+                baseclass = " : " + baseclass;
+            else
+                baseclass = "";
+
             if (m.OptionExternal || m.OptionType == "interface")
             {
-                var baseclass = m.BaseClass;
-
-                if ( baseclass != null )
-                    baseclass = " : " + baseclass;
-                else
-                    baseclass = "";
-
                 //Don't make partial class of external classes or interfaces
                 //Make separate static class for them
                 cw.Bracket( m.OptionAccess + " partial class " + m.SerializerType + baseclass );
@@ -34,7 +34,7 @@ namespace SilentOrbit.ProtocolBuffers
             else
             {
                 cw.Attribute("System.Serializable()");
-                cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.SerializerType);
+                cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.SerializerType + baseclass);
             }
 
             GenerateReader(m);
