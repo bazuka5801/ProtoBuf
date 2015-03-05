@@ -24,10 +24,17 @@ namespace SilentOrbit.ProtocolBuffers
                 cw.Comment(m.OptionAccess + " " + m.OptionType + " " + m.CsType + " {}");
                 return;
             }
+            
 
             //Default class
+            var classDecl = m.OptionAccess + " partial " + m.OptionType + " " + m.CsType;
+
+            if (!String.IsNullOrEmpty(m.OptionInherit)) {
+                classDecl += " : " + m.OptionInherit.Trim();
+            }
+
             cw.Summary(m.Comments);
-            cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.CsType);
+            cw.Bracket(classDecl);
 
             if(options.GenerateDefaultConstructors)
                 GenerateCtorForDefaults(m);

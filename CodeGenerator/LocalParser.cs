@@ -40,6 +40,9 @@ namespace SilentOrbit.ProtocolBuffers
                 case "type":
                     message.OptionType = value;
                     break;
+                case "inherit":
+                    message.OptionInherit = value;
+                    break;
                 case "buffer":
                     message.BufferSize = int.Parse(value);
                     break;

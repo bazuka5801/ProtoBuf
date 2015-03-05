@@ -95,6 +95,11 @@ namespace SilentOrbit.ProtocolBuffers
         public string OptionType { get; set; }
 
         /// <summary>
+        /// Name of a class to extend.
+        /// </summary>
+        public string OptionInherit { get; set; }
+
+        /// <summary>
         /// Initial capacity of allocated MemoryStream when Serializing this object.
         /// Size in bytes.
         /// </summary>
@@ -125,6 +130,7 @@ namespace SilentOrbit.ProtocolBuffers
             this.OptionPreserveUnknown = false;
             this.OptionExternal = false;
             this.OptionType = null;
+            this.OptionInherit = null;
         }
 
         public bool Nullable
