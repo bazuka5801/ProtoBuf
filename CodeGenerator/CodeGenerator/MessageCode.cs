@@ -27,14 +27,8 @@ namespace SilentOrbit.ProtocolBuffers
             
 
             //Default class
-            var classDecl = m.OptionAccess + " partial " + m.OptionType + " " + m.CsType;
-
-            if (!String.IsNullOrEmpty(m.OptionInherit)) {
-                classDecl += " : " + m.OptionInherit.Trim();
-            }
-
             cw.Summary(m.Comments);
-            cw.Bracket(classDecl);
+            cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.CsType);
 
             if(options.GenerateDefaultConstructors)
                 GenerateCtorForDefaults(m);

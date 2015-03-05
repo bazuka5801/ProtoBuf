@@ -67,12 +67,20 @@ namespace SilentOrbit.ProtocolBuffers
 
                 if (f.ProtoType is ProtoMessage)
                 {
-                    if (f.ProtoType.OptionType == "struct")
+                    if ( f.ProtoType.OptionType == "struct")
                     {
-                        if (options.Nullable)
-                            cw.WriteLine("instance." + f.CsName + " = " + FieldReaderType(f, "stream", "br", null) + ";");     
-                        else
-                            cw.WriteLine(FieldReaderType(f, "stream", "br", "ref instance." + f.CsName) + ";");
+						if ( f.OptionUseReferences )
+						{
+							cw.WriteLine( FieldReaderType( f, "stream", "br", "ref instance." + f.CsName ) + ";" );
+						}
+						else
+						{
+							cw.WriteLine( "{" );
+							cw.WriteIndent( "var a = instance." + f.CsName + ";" );
+							cw.WriteIndent( "instance." + f.CsName + " = " + FieldReaderType( f, "stream", "br", "ref a" ) + ";" );
+							cw.WriteLine( "}" );
+						}
+                        
                         return true;
                     }
 
@@ -394,7 +402,7 @@ namespace SilentOrbit.ProtocolBuffers
                 case ProtoBuiltin.Int64:
                     return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt64(" + stream + ",(ulong)" + instance + ");";
                 case ProtoBuiltin.UInt32:
-                    return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(" + stream + ", " + instance + ");";
+                    return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(" + stream + ",(uint)" + instance + ");";
                 case ProtoBuiltin.UInt64:
                     return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt64(" + stream + ", " + instance + ");";
                 case ProtoBuiltin.SInt32:
