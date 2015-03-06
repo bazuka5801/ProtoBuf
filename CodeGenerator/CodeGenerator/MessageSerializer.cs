@@ -25,6 +25,14 @@ namespace SilentOrbit.ProtocolBuffers
             else
                 baseclass = "";
 
+            String identName = null;
+
+            if (m.OptionIdentifier > 0)
+            {
+                identName = "MessageIdentifier";
+                cw.Attribute("Arcade.Networking.ProtoBuf.MessageIdent(" + identName + ")");
+            }
+
             if (m.OptionExternal || m.OptionType == "interface")
             {
                 //Don't make partial class of external classes or interfaces
@@ -35,6 +43,12 @@ namespace SilentOrbit.ProtocolBuffers
             {
                 cw.Attribute("System.Serializable()");
                 cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.SerializerType + baseclass);
+            }
+
+            if (m.OptionIdentifier > 0)
+            {
+                cw.WriteLine(String.Format("public const uint {0} = 0x{1:x8};", identName, m.OptionIdentifier));
+                cw.WriteLine();
             }
 
             GenerateReader(m);

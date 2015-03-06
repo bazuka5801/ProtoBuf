@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace SilentOrbit.ProtocolBuffers
 {
@@ -32,6 +33,15 @@ namespace SilentOrbit.ProtocolBuffers
             }
         }
 
+        static uint ParseUInt32(String value)
+        {
+            if (value.StartsWith("0x")) {
+                return uint.Parse(value.Substring(2), NumberStyles.HexNumber);
+            } else {
+                return uint.Parse(value);
+            }
+        }
+
         static void ParseMessageOption(ProtoMessage message, string key, string value)
         {
             //Parse value
@@ -48,6 +58,9 @@ namespace SilentOrbit.ProtocolBuffers
                     break;
                 case "baseclass":
                     message.OptionBase = value;
+                    break;
+                case "ident":
+                    message.OptionIdentifier = ParseUInt32(value);
                     break;
                 case "buffer":
                     message.BufferSize = int.Parse(value);

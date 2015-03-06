@@ -116,6 +116,11 @@ namespace SilentOrbit.ProtocolBuffers
         public string OptionBase { get; set; }
 
         /// <summary>
+        /// [MessageIdent] attribute value, or zero to omit
+        /// </summary>
+        public uint OptionIdentifier { get; set; }
+
+        /// <summary>
         /// Initial capacity of allocated MemoryStream when Serializing this object.
         /// Size in bytes.
         /// </summary>
@@ -147,6 +152,7 @@ namespace SilentOrbit.ProtocolBuffers
             this.OptionExternal = false;
             this.OptionNoPartials = false;
             this.OptionNoInstancing = false;
+            this.OptionIdentifier = 0;
             this.OptionType = null;
         }
 
