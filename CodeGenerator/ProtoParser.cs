@@ -1,12 +1,75 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace SilentOrbit.ProtocolBuffers
 {
     static class ProtoParser
     {
+        private static bool ParseCondition(String condition)
+        {
+            // Basic, although probably no real need to parse parentheses / conjunctions / disjunctions / elsif etc
+            return condition.Trim().Equals("PROTOBUF");
+        }
+
+        private static String ReadAllLinesCodeFile(TextReader reader)
+        {
+            var t = "";
+
+            var ifRegex = new Regex(@"^\s*#if\s+(?<condition>[!A-Z_()&|]+(\s+[!A-Z_()&|]+)*)\s*$", RegexOptions.Compiled);
+            var endifRegex = new Regex(@"^\s*#endif\s*$", RegexOptions.Compiled);
+
+            var conditions = new Stack<bool>();
+
+            var anyValid = false;
+
+            while (true)
+            {
+                string line = reader.ReadLine();
+                if (line == null)
+                    break;
+
+                var match = ifRegex.Match(line);
+
+                if (match.Success)
+                {
+                    conditions.Push(ParseCondition(match.Groups["condition"].Value));
+                }
+                else if ((match = endifRegex.Match(line)).Success)
+                {
+                    if (conditions.Count > 0) conditions.Pop();
+                }
+                else if (conditions.Count > 0 && conditions.All(x => x))
+                {
+                    anyValid = true;
+                    t += line;
+                }
+
+
+                t += "\n";
+            }
+
+            return anyValid ? t : String.Empty;
+        }
+
+        private static String ReadAllLinesProto(TextReader reader)
+        {
+            var t = "";
+
+            while (true) {
+                string line = reader.ReadLine();
+                if (line == null)
+                    break;
+
+                t += line + "\n";
+            }
+
+            return t;
+        }
+
         /// <summary>
         /// Parse a single .proto file.
         /// Return true if successful/no errors.
@@ -17,19 +80,28 @@ namespace SilentOrbit.ProtocolBuffers
             //Real parsing is done in ParseMessages
             lastComment.Clear();
 
+            var codeFile = Path.GetExtension(path).ToLower().Equals(".cs");
+
             //Read entire file and pass it into a TokenReader
             string t = "";
             using (TextReader reader = new StreamReader(path, Encoding.UTF8))
             {
-                while (true)
+                if (codeFile)
                 {
-                    string line = reader.ReadLine();
-                    if (line == null)
-                        break;
-
-                    t += line + "\n";
+                    t = ReadAllLinesCodeFile(reader);
+                } else
+                {
+                    t = ReadAllLinesProto(reader);
                 }
             }
+
+            if (t.Length == 0)
+            {
+                return;
+            }
+
+            Console.WriteLine("Parsing " + path);
+
             TokenReader tr = new TokenReader(t, path);
 
             try

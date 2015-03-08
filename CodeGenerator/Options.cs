@@ -67,16 +67,25 @@ namespace SilentOrbit.ProtocolBuffers
 
             //Do any extra option checking/cleanup here
             var inputs = new List<string>(options.InputProto);
-            options.InputProto = inputs;
-            for (int n = 0; n < inputs.Count; n++)
-            {
-                inputs[n] = Path.GetFullPath(inputs[n]);
-                if (File.Exists(inputs[n]) == false)
-                {
-                    Console.Error.WriteLine("File not found: " + inputs[n]);
-                    error = true;
-                }
-            }
+            options.InputProto = inputs
+                .Select(x => Path.GetFullPath(x))
+                .SelectMany(x => {
+                    if (Directory.Exists(x))
+                    {
+                        return Directory.GetFiles(x, "*.proto", SearchOption.AllDirectories)
+                            .Union(Directory.GetFiles(x, "*.cs", SearchOption.AllDirectories));
+                    }
+
+                    if (!File.Exists(x))
+                    {
+                        Console.Error.WriteLine("File not found: " + x);
+                        error = true;
+                        return Enumerable.Empty<String>();
+                    }
+
+                    return new[] { x };
+                })
+                .ToArray();
 
             //Backwards compatibility
             string firstPathCs = inputs[0];

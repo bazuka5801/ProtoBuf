@@ -31,8 +31,6 @@ namespace SilentOrbit.ProtocolBuffers
             {
                 try
                 {
-                    Console.WriteLine("Parsing " + protoPath);
-
                     var proto = new ProtoCollection();
                     ProtoParser.Parse(protoPath, proto);
                     collection.Merge(proto);

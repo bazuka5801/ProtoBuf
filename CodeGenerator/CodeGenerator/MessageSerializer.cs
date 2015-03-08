@@ -30,7 +30,7 @@ namespace SilentOrbit.ProtocolBuffers
             if (m.OptionIdentifier > 0)
             {
                 identName = "MessageIdentifier";
-                cw.Attribute("Arcade.Networking.ProtoBuf.MessageIdent(" + identName + ")");
+                cw.Attribute("Arcade.ProtoBuf.MessageIdent(" + identName + ")");
             }
 
             if (m.OptionExternal || m.OptionType == "interface")
@@ -68,7 +68,7 @@ namespace SilentOrbit.ProtocolBuffers
         {
             #region Helper Deserialize Methods
             string refstr = (m.OptionType == "struct") ? "ref " : "";
-            if ( m.OptionType != "interface" && !m.OptionNoPartials )
+            if ( m.OptionType != "interface" )
             {
                 if ( !m.OptionNoInstancing )
                 {
@@ -102,10 +102,13 @@ namespace SilentOrbit.ProtocolBuffers
                 cw.EndBracketSpace();
                 }
 
-                cw.Summary( "Load this value from a proto buffer" );
-                cw.Bracket( m.OptionAccess + " void FromProto(Stream stream)" );
-                cw.WriteLine( "Deserialize(stream, this );" );
-                cw.EndBracketSpace();
+                if ( !m.OptionNoPartials )
+                {
+                    cw.Summary( "Load this value from a proto buffer" );
+                    cw.Bracket( m.OptionAccess + " void FromProto(Stream stream)" );
+                    cw.WriteLine( "Deserialize(stream, this );" );
+                    cw.EndBracketSpace();
+                }
 
             }
 
