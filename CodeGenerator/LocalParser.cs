@@ -80,6 +80,12 @@ namespace SilentOrbit.ProtocolBuffers
                 case "readonly":
                     field.OptionReadOnly = true;
                     break;
+                case "interpolate":
+                    field.OptionInterpolate = true;
+                    break;
+                case "angle":
+                    field.OptionFlags.Add(flag);
+                    break;
                 default:
                     throw new NotImplementedException("Unknown field option: " + flag);
             }
@@ -99,7 +105,10 @@ namespace SilentOrbit.ProtocolBuffers
                     field.BufferSize = int.Parse(value);
                     break;
                 case "references":
-                    field.OptionUseReferences = Boolean.Parse( value );
+                    field.OptionUseReferences = bool.Parse(value);
+                    break;
+                case "smoothing":
+                    field.OptionSmoothing = float.Parse(value);
                     break;
                 default:
                     throw new NotImplementedException("Unknown field option: " + key);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SilentOrbit.ProtocolBuffers
 {
@@ -46,7 +47,10 @@ namespace SilentOrbit.ProtocolBuffers
         //Field options
         public bool OptionPacked = false;
         public bool OptionDeprecated = false;
-		public bool OptionUseReferences = true;
+        public bool OptionUseReferences = true;
+        public bool OptionInterpolate = false;
+        public List<string> OptionFlags = new List<string>();
+        public float OptionSmoothing = 0f;
         public string OptionDefault = null;
 
         public bool IsUsingBinaryWriter

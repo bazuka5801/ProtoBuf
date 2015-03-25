@@ -142,7 +142,34 @@ namespace SilentOrbit.ProtocolBuffers
 
         string GenerateProperty(Field f)
         {
-            string type = f.ProtoType.FullCsType;
+            var type = f.ProtoType.FullCsType;
+            var attribs = String.Empty;
+
+            var isStruct = f.ProtoType is ProtoMessage && f.ProtoType.OptionType == "struct";
+
+            if (!f.OptionReadOnly && f.OptionInterpolate) {
+                attribs += "[ProtoBuf.Interpolate(";
+
+                var attribOptions = new List<String>();
+
+                if (f.OptionFlags.Contains("angle")) {
+                    attribOptions.Add("Flags = InterpolationFlags.Angle");
+                }
+                if (f.OptionSmoothing > 0f) {
+                    attribOptions.Add("Smoothing = " + f.OptionSmoothing + "f");
+                }
+
+                attribs += String.Join(", ", attribOptions.ToArray());
+
+                attribs += ")]" + Environment.NewLine;
+
+                if (isStruct) {
+                    attribs += "public " + type + " _" + f.CsName
+                        + "Prop { get { return " + f.CsName + "; } set { "
+                        + f.CsName + " = value; } }" + Environment.NewLine + Environment.NewLine;
+                }
+            }
+
             if (f.OptionCodeType != null)
                 type = f.OptionCodeType;
             if (f.Rule == FieldRule.Repeated)
@@ -151,11 +178,11 @@ namespace SilentOrbit.ProtocolBuffers
                 type = type + "?";
 
             if (f.OptionReadOnly)
-                return f.OptionAccess + " readonly " + type + " " + f.CsName + " = new " + type + "();";
-            else if (f.ProtoType is ProtoMessage && f.ProtoType.OptionType == "struct")
-                return f.OptionAccess + " " + type + " " + f.CsName + ";";
+                return attribs + f.OptionAccess + " readonly " + type + " " + f.CsName + " = new " + type + "();";
+            else if (isStruct)
+                return attribs + f.OptionAccess + " " + type + " " + f.CsName + ";";
             else
-                return f.OptionAccess + " " + type + " " + f.CsName + " { get; set; }";
+                return attribs + f.OptionAccess + " " + type + " " + f.CsName + " { get; set; }";
         }
     }
 }

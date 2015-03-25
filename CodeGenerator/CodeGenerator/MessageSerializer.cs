@@ -30,7 +30,7 @@ namespace SilentOrbit.ProtocolBuffers
             if (m.OptionIdentifier > 0)
             {
                 identName = "MessageIdentifier";
-                cw.Attribute("Arcade.ProtoBuf.MessageIdent(" + identName + ")");
+                cw.Attribute("ProtoBuf.MessageIdent(" + identName + ")");
             }
 
             if (m.OptionExternal || m.OptionType == "interface")
