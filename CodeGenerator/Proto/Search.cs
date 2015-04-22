@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SilentOrbit.ProtocolBuffers
 {
@@ -11,6 +13,8 @@ namespace SilentOrbit.ProtocolBuffers
         {
             //Search for message or enum
             ProtoType pt;
+
+            var imports = msg.Imports;
 
             //Search from one level up until a match is found
             while (msg is ProtoCollection == false)
@@ -29,7 +33,7 @@ namespace SilentOrbit.ProtocolBuffers
             }
 
             //Finally search for global namespace
-            return SearchSubMessages(msg, path);
+            return SearchSubMessages(msg, path) ?? SearchImports(msg, imports, path);
         }
 
         static ProtoType SearchSubMessages(ProtoMessage msg, string fullPath)
@@ -51,6 +55,36 @@ namespace SilentOrbit.ProtocolBuffers
             {
                 if (fullPath == subEnum.FullProtoName)
                     return subEnum;
+            }
+
+            return null;
+        }
+
+        static ProtoType SearchImports(ProtoMessage msg, IEnumerable<string> imports, string path)
+        {
+            ProtoType pt;
+
+            try {
+                foreach (var import in imports) {
+                    pt = msg.Messages.Values.Select(x => {
+                        if (x.Package != import) {
+                            return null;
+                        }
+
+                        if (path == x.ProtoName) return x;
+
+                        return path.StartsWith(x.ProtoName + ".")
+                            ? SearchSubMessages(x, x.Package + "." + path)
+                            : null;
+
+                    }).FirstOrDefault(x => x != null);
+                    if (pt != null) return pt;
+
+                    pt = msg.Enums.Values.FirstOrDefault(x => x.Package == import && x.ProtoName == path);
+                    if (pt != null) return pt;
+                }
+            } catch {
+                throw;
             }
 
             return null;

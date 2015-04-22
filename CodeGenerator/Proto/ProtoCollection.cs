@@ -9,7 +9,7 @@ namespace SilentOrbit.ProtocolBuffers
     class ProtoCollection : ProtoMessage
     {
         public ProtoCollection()
-            : base(null, null)
+            : base(null, null, null)
         {
         }
 

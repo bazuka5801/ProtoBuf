@@ -139,6 +139,8 @@ namespace SilentOrbit.ProtocolBuffers
         {
             string package = "Example";
 
+            var imports = new List<string>();
+
             while (true)
             {
                 string token = tr.ReadNextComment();
@@ -153,7 +155,7 @@ namespace SilentOrbit.ProtocolBuffers
                             lastComment.Clear();
                             continue;
                         case "message":
-                            ParseMessage(tr, p, package);
+                            ParseMessage(tr, p, package, imports);
                             break;
                         case "enum":
                             ParseEnum(tr, p, package);
@@ -162,8 +164,8 @@ namespace SilentOrbit.ProtocolBuffers
                             //Save options
                             ParseOption(tr, p);
                             break;
-                        case "import": //Ignored
-                            tr.ReadNext();
+                        case "import":
+                            imports.Add(tr.ReadNext());
                             tr.ReadNextOrThrow(";");
                             break;
                         case "package":
@@ -176,7 +178,7 @@ namespace SilentOrbit.ProtocolBuffers
                             tr.ReadNextOrThrow(";");
                             break;
                         case "extend":
-                            ParseExtend(tr, p, package);
+                            ParseExtend(tr, p, package, imports);
                             break;
                         default:
                             throw new ProtoFormatException("Unexpected/not implemented: " + token, tr);
@@ -189,9 +191,9 @@ namespace SilentOrbit.ProtocolBuffers
             }
         }
 
-        static void ParseMessage(TokenReader tr, ProtoMessage parent, string package)
+        static void ParseMessage(TokenReader tr, ProtoMessage parent, string package, IEnumerable<string> imports)
         {
-            var msg = new ProtoMessage(parent, package);
+            var msg = new ProtoMessage(parent, package, imports);
             LocalParser.ParseComments(msg, lastComment, tr);
             msg.ProtoName = tr.ReadNext();
 
@@ -199,7 +201,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             try
             {
-                while (ParseField(tr, msg))
+                while (ParseField(tr, msg, imports))
                     continue;
             }
             catch (Exception e)
@@ -210,9 +212,9 @@ namespace SilentOrbit.ProtocolBuffers
             parent.Messages.Add(msg.ProtoName, msg);
         }
 
-        static void ParseExtend(TokenReader tr, ProtoMessage parent, string package)
+        static void ParseExtend(TokenReader tr, ProtoMessage parent, string package, IEnumerable<string> imports)
         {
-            var msg = new ProtoMessage(parent, package);
+            var msg = new ProtoMessage(parent, package, imports);
             LocalParser.ParseComments(msg, lastComment, tr);
             msg.ProtoName = tr.ReadNext();
 
@@ -220,7 +222,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             try
             {
-                while (ParseField(tr, msg))
+                while (ParseField(tr, msg, imports))
                     continue;
             }
             catch (Exception e)
@@ -232,7 +234,7 @@ namespace SilentOrbit.ProtocolBuffers
             //parent.Messages.Add(msg.ProtoName, msg);
         }
 
-        static bool ParseField(TokenReader tr, ProtoMessage m)
+        static bool ParseField(TokenReader tr, ProtoMessage m, IEnumerable<string> imports)
         {
             string rule = tr.ReadNextComment();
             while (true)
@@ -267,7 +269,7 @@ namespace SilentOrbit.ProtocolBuffers
                     ParseOption(tr, m);
                     return true;
                 case "message":
-                    ParseMessage(tr, m, m.Package + "." + m.ProtoName);
+                    ParseMessage(tr, m, m.Package + "." + m.ProtoName, imports);
                     return true;
                 case "enum":
                     ParseEnum(tr, m, m.Package + "." + m.ProtoName);

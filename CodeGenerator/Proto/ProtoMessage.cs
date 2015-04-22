@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SilentOrbit.ProtocolBuffers
 {
     class ProtoMessage : ProtoType, IComment
     {
+        private readonly string[] _imports;
+
         public override Wire WireType
         {
             get { return Wire.LengthDelimited; }
@@ -15,6 +18,8 @@ namespace SilentOrbit.ProtocolBuffers
         public Dictionary<int, Field> Fields = new Dictionary<int, Field>();
         public Dictionary<string, ProtoMessage> Messages = new Dictionary<string, ProtoMessage>();
         public Dictionary<string, ProtoEnum> Enums = new Dictionary<string, ProtoEnum>();
+
+        public IEnumerable<string> Imports { get { return _imports; } } 
 
         public string BaseClass
         {
@@ -54,9 +59,10 @@ namespace SilentOrbit.ProtocolBuffers
             }
         }
 
-        public ProtoMessage(ProtoMessage parent, string package)
+        public ProtoMessage(ProtoMessage parent, string package, IEnumerable<string> imports)
             : base(parent, package)
         {
+            _imports = (imports ?? Enumerable.Empty<string>()).ToArray();
             this.OptionType = "class";
         }
 
