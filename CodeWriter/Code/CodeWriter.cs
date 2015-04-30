@@ -134,6 +134,18 @@ namespace SilentOrbit.Code
             Indent();
         }
 
+        public void ElseBracket()
+        {
+            EndBracket();
+            Bracket("else");
+        }
+
+        public void ElseIfBracket(string str)
+        {
+            EndBracket();
+            Bracket("else if (" + str + ")");
+        }
+
         public void WhileBracket(string str)
         {
             WriteLine("while (" + str + ")");
