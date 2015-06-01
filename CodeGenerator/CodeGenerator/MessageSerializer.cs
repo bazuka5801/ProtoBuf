@@ -58,6 +58,35 @@ namespace SilentOrbit.ProtocolBuffers
             return;
         }
 
+        private void GenerateDefaults(ProtoMessage m)
+        {
+            //Prepare List<> and default values
+            foreach (Field f in m.Fields.Values) {
+                if (f.Rule == FieldRule.Repeated) {
+                    if (f.OptionReadOnly == false) {
+                        //Initialize lists of the custom DateTime or TimeSpan type.
+                        string csType = f.ProtoType.FullCsType;
+                        if (f.OptionCodeType != null)
+                            csType = f.OptionCodeType;
+
+                        cw.WriteLine("if (instance." + f.CsName + " == null)");
+                        cw.WriteIndent("instance." + f.CsName + " = new List<" + csType + ">();");
+                    }
+                } else if (f.OptionDefault != null) {
+                    cw.WriteLine("instance." + f.CsName + " = " + f.FormatForTypeAssignment() + ";");
+                } else if ((f.Rule == FieldRule.Optional) && !options.Nullable) {
+                    if (f.ProtoType is ProtoEnum) {
+                        ProtoEnum pe = f.ProtoType as ProtoEnum;
+                        //the default value is the first value listed in the enum's type definition
+                        foreach (var kvp in pe.Enums) {
+                            cw.WriteLine("instance." + f.CsName + " = " + pe.FullCsType + "." + kvp.Name + ";");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         void GenerateReader(ProtoMessage m)
         {
             #region Helper Deserialize Methods
@@ -90,6 +119,20 @@ namespace SilentOrbit.ProtocolBuffers
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
                     cw.WriteLine("using (var ms = new MemoryStream(buffer))");
                     cw.WriteIndent("Deserialize(ms, " + refstr + "instance);");
+                    cw.WriteLine("return instance;");
+                    cw.EndBracketSpace();
+
+                    cw.Summary("Helper: create a new instance when deserializing a JObject");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj)");
+                    cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
+                    cw.WriteLine("Deserialize(obj, " + refstr + "instance);");
+                    cw.WriteLine("return instance;");
+                    cw.EndBracketSpace();
+
+                    cw.Summary("Helper: create a new instance and deserialize JSON from a string");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(string json)");
+                    cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
+                    cw.WriteLine("Deserialize(global::Newtonsoft.Json.Linq.JObject.Parse(json), " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
                 }
@@ -135,31 +178,7 @@ namespace SilentOrbit.ProtocolBuffers
                 if (m.IsUsingBinaryWriter)
                     cw.WriteLine("BinaryReader br = new BinaryReader(stream);");
 
-                //Prepare List<> and default values
-                foreach (Field f in m.Fields.Values) {
-                    if (f.Rule == FieldRule.Repeated) {
-                        if (f.OptionReadOnly == false) {
-                            //Initialize lists of the custom DateTime or TimeSpan type.
-                            string csType = f.ProtoType.FullCsType;
-                            if (f.OptionCodeType != null)
-                                csType = f.OptionCodeType;
-
-                            cw.WriteLine("if (instance." + f.CsName + " == null)");
-                            cw.WriteIndent("instance." + f.CsName + " = new List<" + csType + ">();");
-                        }
-                    } else if (f.OptionDefault != null) {
-                        cw.WriteLine("instance." + f.CsName + " = " + f.FormatForTypeAssignment() + ";");
-                    } else if ((f.Rule == FieldRule.Optional) && !options.Nullable) {
-                        if (f.ProtoType is ProtoEnum) {
-                            ProtoEnum pe = f.ProtoType as ProtoEnum;
-                            //the default value is the first value listed in the enum's type definition
-                            foreach (var kvp in pe.Enums) {
-                                cw.WriteLine("instance." + f.CsName + " = " + pe.FullCsType + "." + kvp.Name + ";");
-                                break;
-                            }
-                        }
-                    }
-                }
+                GenerateDefaults(m);
 
                 if (method == "DeserializeLengthDelimited") {
                     //Important to read stream position after we have read the length field
@@ -251,6 +270,32 @@ namespace SilentOrbit.ProtocolBuffers
                 cw.EndBracket();
                 cw.WriteLine();
             }
+
+            //JSON deserialize
+            cw.Summary("Deserializes an instance from a JSON object.");
+            cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj, " + refstr + m.FullCsType + " instance)");
+
+            GenerateDefaults(m);
+      
+            cw.WriteLine();
+            cw.Bracket("foreach (var property in obj.Properties())");
+            cw.Switch("property.Name");
+
+            foreach (var f in m.Fields.Values) {
+                cw.Case("\"" + f.CsName + "\"");
+                fieldSerializer.JsonFieldReader(f, "property.Value");
+                cw.WriteLine("break;");
+            }
+
+            cw.SwitchEnd();
+            cw.EndBracket();
+            cw.WriteLine();
+
+            if (m.OptionTriggers)
+                cw.WriteLine("instance.AfterDeserialize();");
+            cw.WriteLine("return instance;");
+            cw.EndBracket();
+            cw.WriteLine();
 
             return;
         }
