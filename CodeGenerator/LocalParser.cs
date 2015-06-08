@@ -28,6 +28,13 @@ namespace SilentOrbit.ProtocolBuffers
                 case "noinstancing":
                     message.OptionNoInstancing = true;
                     break;
+                case "messagetable":
+                    if (message.OptionType != "interface") {
+                        throw new Exception("Option messagetable is only valid for interfaces");
+                    }
+
+                    message.OptionMessageTableInterface = true;
+                    break;
                 default:
                     throw new NotImplementedException("Unknown option: " + flag);
             }
