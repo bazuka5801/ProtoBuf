@@ -17,6 +17,11 @@ namespace SilentOrbit.ProtocolBuffers
 
         public void GenerateClass(ProtoMessage m)
         {
+            var baseclass = m.BaseClass ?? "";
+
+            if (baseclass.Length > 0)
+                baseclass = " : " + baseclass;
+
             //Do not generate class code for external classes
             if (m.OptionExternal)
             {
@@ -28,7 +33,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             //Default class
             cw.Summary(m.Comments);
-            cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.CsType);
+            cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.CsType + baseclass);
 
             if(options.GenerateDefaultConstructors)
                 GenerateCtorForDefaults(m);
