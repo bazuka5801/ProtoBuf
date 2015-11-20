@@ -664,7 +664,7 @@ namespace SilentOrbit.ProtocolBuffers
             }
             return FieldWriterJsonPrimitive(f, messageTables, writer, instance);
         }
-
+        
         static string FieldWriterJsonPrimitive(Field f, ProtoMessage[] messageTables, string writer, string instance)
         {
             if (f.ProtoType is ProtoEnum)
@@ -691,7 +691,7 @@ namespace SilentOrbit.ProtocolBuffers
                 case ProtoBuiltin.Bool:
                     return writer + ".Write(" + instance + " ? \"true\" : \"false\");";
                 case ProtoBuiltin.String:
-                    return writer + ".Write(\"\\\"\" + " + instance + " + \"\\\"\");";
+                    return writer + ".Write(new global::Newtonsoft.Json.Linq.JValue(" + instance + ").ToString(global::Newtonsoft.Json.Formatting.None));";
                 case ProtoBuiltin.Bytes:
                     return writer + ".Write(" + instance + " == null ? \"null\" : (\"\\\"\" + global::System.Convert.ToBase64String(" + instance + ") + \"\\\"\"));";
                 default:

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using SilentOrbit.Code;
@@ -9,6 +10,8 @@ namespace SilentOrbit.ProtocolBuffers
     {
         public static int Main(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-GB");
+
             var options = Options.Parse(args);
             if (options == null)
                 return -1;
