@@ -10,11 +10,11 @@ reading and writing them to the Protocol Buffers binary format.
 
 ## Download
 
-Get the [precompiled binaries here](https://github.com/hultqvist/ProtoBuf/releases).
+Get the [precompiled binaries here](https://github.com/bazuka5801/ProtoBuf/releases).
 
 Get the source using git:
 
-    git clone https://github.com/hultqvist/ProtoBuf.git --recursive
+    git clone https://github.com/bazuka5801/ProtoBuf.git --recursive
 
 *Don't use the "download zip" feature on github as it won't include submodules such as CommandLine*
 
