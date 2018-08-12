@@ -66,8 +66,10 @@ namespace SilentOrbit.ProtocolBuffers
                         cw.WriteLine("if (instance." + f.CsName + " == null)");
                         cw.WriteIndent("instance." + f.CsName + " = new List<" + csType + ">();");
                     }
-                } else if (f.OptionDefault != null) {
-                    cw.WriteLine("instance." + f.CsName + " = " + f.FormatForTypeAssignment() + ";");
+                } else if (f.OptionDefault != null)
+                {
+                    if (options.Properties)
+                        cw.WriteLine("instance." + f.CsName + " = " + f.FormatForTypeAssignment() + ";");
                 } else if ((f.Rule == FieldRule.Optional) && !options.Nullable) {
                     if (f.ProtoType is ProtoEnum) {
                         ProtoEnum pe = f.ProtoType as ProtoEnum;

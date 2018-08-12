@@ -175,6 +175,10 @@ namespace SilentOrbit.ProtocolBuffers
                 }
             }
 
+            if (options.Properties == false && string.IsNullOrEmpty(f.OptionDefault) == false)
+            {
+                
+            }
             if (f.OptionCodeType != null)
                 type = f.OptionCodeType;
             if (f.Rule == FieldRule.Repeated)
@@ -187,7 +191,12 @@ namespace SilentOrbit.ProtocolBuffers
             else if (isStruct)
                 return attribs + f.OptionAccess + " " + type + " " + f.CsName + ";";
             else
-                return attribs + f.OptionAccess + " " + type + " " + f.CsName + " { get; set; }";
+            {
+                string ret = attribs + f.OptionAccess + " " + type + " " + f.CsName;
+                string defValue = string.IsNullOrEmpty(f.OptionDefault) == false ? $" = {f.FormatForTypeAssignment()}" : "";
+                ret += options.Properties ? " { get; set; }" : $"{defValue};";
+                return ret;
+            }
         }
     }
 }

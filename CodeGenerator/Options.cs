@@ -55,6 +55,12 @@ namespace SilentOrbit.ProtocolBuffers
         /// </summary>
         [Option("nullable", Required = false, HelpText = "Generate nullable primitives for optional fields")]
         public bool Nullable { get; set; }
+        
+        /// <summary>
+        /// If set properties will be generated isnstead of field
+        /// </summary>
+        [Option("properties", Required = false, HelpText = "Generate properties instead of fields")]
+        public bool Properties { get; set; }
 
         public static Options Parse(string[] args)
         {
