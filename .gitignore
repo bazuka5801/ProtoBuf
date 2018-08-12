@@ -5,3 +5,5 @@ bin/
 *.suo
 obj/
 *.user
+**/.idea/*
+**/Builded/*
