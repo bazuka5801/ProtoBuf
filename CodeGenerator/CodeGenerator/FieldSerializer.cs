@@ -386,15 +386,16 @@ namespace SilentOrbit.ProtocolBuffers
                         cw.IfBracket("instance." + f.CsName + " != null");
                     var needValue = !f.ProtoType.Nullable && options.Nullable;
                     cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName + (needValue ? ".Value" : "")));
-                    if (f.ProtoType.Nullable || options.Nullable) { //Struct always exist, not optional
-                        cw.ElseBracket();
-                        cw.WriteLine("writer.Write(\"null\");");
+                    if (f.ProtoType.Nullable || options.Nullable) //Struct always exist, not optional
                         cw.EndBracket();
-                    }
                     return;
                 }
                 if (f.ProtoType is ProtoEnum) {
+                    if (f.OptionDefault != null)
+                        cw.IfBracket("instance." + f.CsName + " != " + f.ProtoType.CsType + "." + f.OptionDefault);
                     cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName));
+                    if (f.OptionDefault != null)
+                        cw.EndBracket();
                     return;
                 }
                 cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName));
