@@ -99,60 +99,6 @@ namespace SilentOrbit.ProtocolBuffers
             return true;
         }
 
-        public bool JsonFieldReader(Field f, string jToken)
-        {
-            if (f.Rule == FieldRule.Repeated) {
-                //Make sure we are not reading a list of interfaces
-                if (f.ProtoType.OptionType == "interface") {
-                    cw.WriteLine("throw new NotSupportedException(\"Can't deserialize a list of interfaces\");");
-                    return false;
-                }
-                
-                cw.Comment("repeated");
-                cw.ForeachBracket("var val in ((global::Newtonsoft.Json.Linq.JArray) " + jToken + ")");
-                cw.WriteLine("instance." + f.CsName + ".Add(" + JsonFieldReaderType(f, "val", null) + ");");
-                cw.EndBracket();
-            } else {
-                if (f.OptionReadOnly) {
-                    //The only "readonly" fields we can modify
-                    //We could possibly support bytes primitive too but it would require the incoming length to match the wire length
-                    if (f.ProtoType is ProtoMessage) {
-                        cw.WriteLine(JsonFieldReaderType(f, jToken, "instance." + f.CsName) + ";");
-                        return true;
-                    }
-                    cw.WriteLine("throw new InvalidOperationException(\"Can't deserialize into a readonly primitive field\");");
-                    return false;
-                }
-
-                if (f.ProtoType is ProtoMessage) {
-                    if (f.ProtoType.OptionType == "struct") {
-                        if (f.OptionUseReferences) {
-                            cw.WriteLine(JsonFieldReaderType(f, jToken, "ref instance." + f.CsName) + ";");
-                        } else {
-                            cw.WriteLine("{");
-                            cw.WriteIndent("var a = instance." + f.CsName + ";");
-                            cw.WriteIndent("instance." + f.CsName + " = " + JsonFieldReaderType(f, jToken, "ref a") + ";");
-                            cw.WriteLine("}");
-                        }
-
-                        return true;
-                    }
-
-                    cw.WriteLine("if (instance." + f.CsName + " == null)");
-                    if (f.ProtoType.OptionType == "interface")
-                        cw.WriteIndent("throw new InvalidOperationException(\"Can't deserialize into a interfaces null pointer\");");
-                    else
-                        cw.WriteIndent("instance." + f.CsName + " = " + JsonFieldReaderType(f, jToken, null) + ";");
-                    cw.WriteLine("else");
-                    cw.WriteIndent(JsonFieldReaderType(f, jToken, "instance." + f.CsName) + ";");
-                    return true;
-                }
-
-                cw.WriteLine("instance." + f.CsName + " = " + JsonFieldReaderType(f, jToken, "instance." + f.CsName) + ";");
-            }
-            return true;
-        }
-
         /// <summary>
         /// Read a primitive from the stream
         /// </summary>
@@ -191,39 +137,6 @@ namespace SilentOrbit.ProtocolBuffers
             }
 
             return FieldReaderPrimitive(f, stream, binaryReader, instance);
-        }
-
-        static string JsonFieldReaderType(Field f, string jToken, string instance)
-        {
-            if (f.OptionCodeType != null) {
-                switch (f.OptionCodeType) {
-                    case "DateTime":
-                        switch (f.ProtoType.ProtoName) {
-                            case ProtoBuiltin.UInt64:
-                            case ProtoBuiltin.Int64:
-                            case ProtoBuiltin.Fixed64:
-                            case ProtoBuiltin.SFixed64:
-                                return "new DateTime((long)" + JsonFieldReaderPrimitive(f, jToken, instance) + ")";
-                        }
-                        throw new ProtoFormatException("Local feature, DateTime, must be stored in a 64 bit field", f.Source);
-
-                    case "TimeSpan":
-                        switch (f.ProtoType.ProtoName) {
-                            case ProtoBuiltin.UInt64:
-                            case ProtoBuiltin.Int64:
-                            case ProtoBuiltin.Fixed64:
-                            case ProtoBuiltin.SFixed64:
-                                return "new TimeSpan((long)" + JsonFieldReaderPrimitive(f, jToken, instance) + ")";
-                        }
-                        throw new ProtoFormatException("Local feature, TimeSpan, must be stored in a 64 bit field", f.Source);
-
-                    default:
-                        //Assume enum
-                        return "(" + f.OptionCodeType + ")" + JsonFieldReaderPrimitive(f, jToken, instance);
-                }
-            }
-
-            return JsonFieldReaderPrimitive(f, jToken, instance);
         }
 
         static string FieldReaderPrimitive(Field f, string stream, string binaryReader, string instance)
@@ -274,60 +187,6 @@ namespace SilentOrbit.ProtocolBuffers
                         return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadString(" + stream + ")";
                     case ProtoBuiltin.Bytes:
                         return "global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadBytes(" + stream + ")";
-                    default:
-                        throw new ProtoFormatException("unknown build in: " + f.ProtoType.ProtoName, f.Source);
-                }
-
-            }
-
-            throw new NotImplementedException();
-        }
-
-        static string JsonFieldReaderPrimitive(Field f, string jToken, string instance)
-        {
-            if (f.ProtoType is ProtoMessage) {
-                var m = f.ProtoType as ProtoMessage;
-                if (f.Rule == FieldRule.Repeated || instance == null)
-                    return m.FullSerializerType + ".Deserialize((global::Newtonsoft.Json.Linq.JObject) (" + jToken + "))";
-                else
-                    return m.FullSerializerType + ".Deserialize((global::Newtonsoft.Json.Linq.JObject) (" + jToken + "), " + instance + ")";
-            }
-
-            if (f.ProtoType is ProtoEnum)
-                return "(" + f.ProtoType.FullCsType + ") (ulong) (" + jToken + ")";
-
-            if (f.ProtoType is ProtoBuiltin) {
-                switch (f.ProtoType.ProtoName) {
-                    case ProtoBuiltin.Double:
-                        return "(double) (" + jToken + ")";
-                    case ProtoBuiltin.Float:
-                        return "(float) (" + jToken + ")";
-                    case ProtoBuiltin.Int32: //Wire format is 64 bit varint
-                        return "(int) (" + jToken + ")";
-                    case ProtoBuiltin.Int64:
-                        return "(long) (" + jToken + ")";
-                    case ProtoBuiltin.UInt32:
-                        return "(uint) (" + jToken + ")";
-                    case ProtoBuiltin.UInt64:
-                        return "(ulong) (" + jToken + ")";
-                    case ProtoBuiltin.SInt32:
-                        return "(int) (" + jToken + ")";
-                    case ProtoBuiltin.SInt64:
-                        return "(long) (" + jToken + ")";
-                    case ProtoBuiltin.Fixed32:
-                        return "(uint) (" + jToken + ")";
-                    case ProtoBuiltin.Fixed64:
-                        return "(ulong) (" + jToken + ")";
-                    case ProtoBuiltin.SFixed32:
-                        return "(int) (" + jToken + ")";
-                    case ProtoBuiltin.SFixed64:
-                        return "(long) (" + jToken + ")";
-                    case ProtoBuiltin.Bool:
-                        return "(bool) (" + jToken + ")";
-                    case ProtoBuiltin.String:
-                        return "(string) (" + jToken + ")";
-                    case ProtoBuiltin.Bytes:
-                        return "global::System.Convert.FromBase64String((string) (" + jToken + "))";
                     default:
                         throw new ProtoFormatException("unknown build in: " + f.ProtoType.ProtoName, f.Source);
                 }

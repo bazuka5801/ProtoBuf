@@ -85,7 +85,6 @@ namespace SilentOrbit.ProtocolBuffers
                 }
             }
         }
-
         void GenerateReader(ProtoMessage m)
         {
             #region Helper Deserialize Methods
@@ -118,20 +117,6 @@ namespace SilentOrbit.ProtocolBuffers
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
                     cw.WriteLine("using (var ms = new MemoryStream(buffer))");
                     cw.WriteIndent("Deserialize(ms, " + refstr + "instance);");
-                    cw.WriteLine("return instance;");
-                    cw.EndBracketSpace();
-
-                    cw.Summary("Helper: create a new instance when deserializing a JObject");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj)");
-                    cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("Deserialize(obj, " + refstr + "instance);");
-                    cw.WriteLine("return instance;");
-                    cw.EndBracketSpace();
-
-                    cw.Summary("Helper: create a new instance and deserialize JSON from a string");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(string json)");
-                    cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("Deserialize(global::Newtonsoft.Json.Linq.JObject.Parse(json), " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
                 }
@@ -269,32 +254,6 @@ namespace SilentOrbit.ProtocolBuffers
                 cw.EndBracket();
                 cw.WriteLine();
             }
-
-            //JSON deserialize
-            cw.Summary("Deserializes an instance from a JSON object.");
-            cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj, " + refstr + m.FullCsType + " instance)");
-
-            GenerateDefaults(m);
-      
-            cw.WriteLine();
-            cw.Bracket("foreach (var property in obj.Properties())");
-            cw.Switch("property.Name");
-
-            foreach (var f in m.Fields.Values) {
-                cw.Case("\"" + f.CsName + "\"");
-                fieldSerializer.JsonFieldReader(f, "property.Value");
-                cw.WriteLine("break;");
-            }
-
-            cw.SwitchEnd();
-            cw.EndBracket();
-            cw.WriteLine();
-
-            if (m.OptionTriggers)
-                cw.WriteLine("instance.AfterDeserialize();");
-            cw.WriteLine("return instance;");
-            cw.EndBracket();
-            cw.WriteLine();
 
             return;
         }
