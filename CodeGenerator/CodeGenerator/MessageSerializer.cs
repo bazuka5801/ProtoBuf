@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using SilentOrbit.Code;
 
 namespace SilentOrbit.ProtocolBuffers
@@ -83,89 +82,69 @@ namespace SilentOrbit.ProtocolBuffers
             }
         }
 
-        void FindMessageTableParams(ProtoMessage m, out string mTableParamDefs, out string mTableParams)
-        {
-            mTableParamDefs = "";
-            mTableParams = "";
-            if (m.RequiredMessageTables.Any()) {
-                mTableParamDefs = string.Join("", m.RequiredMessageTables.Select(
-                    (x, i) => string.Format(", ProtoBuf.MessageTable<{0}> mTable{1}", x.CsType, i)).ToArray());
-                mTableParams = string.Join("", m.RequiredMessageTables.Select(
-                    (x, i) => string.Format(", mTable{0}", i)).ToArray());
-            }
-        }
-
         void GenerateReader(ProtoMessage m)
         {
-            string mTableParamDefs, mTableParams;
-            FindMessageTableParams(m, out mTableParamDefs, out mTableParams);
-
             #region Helper Deserialize Methods
             string refstr = (m.OptionType == "struct") ? "ref " : "";
             if (m.OptionType != "interface") {
                 if (!m.OptionNoInstancing) {
                     cw.Summary("Helper: create a new instance to deserializing into");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(Stream stream" + mTableParamDefs + ")");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(Stream stream)");
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("Deserialize(stream" + mTableParams + ", " + refstr + "instance);");
+                    cw.WriteLine("Deserialize(stream, " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
 
                     cw.Summary("Helper: create a new instance to deserializing into");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " DeserializeLengthDelimited(Stream stream" + mTableParamDefs + ")");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " DeserializeLengthDelimited(Stream stream)");
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("DeserializeLengthDelimited(stream" + mTableParams + ", " + refstr + "instance);");
+                    cw.WriteLine("DeserializeLengthDelimited(stream, " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
 
                     cw.Summary("Helper: create a new instance to deserializing into");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " DeserializeLength(Stream stream" + mTableParamDefs + ", int length)");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " DeserializeLength(Stream stream, int length)");
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("DeserializeLength(stream" + mTableParams + ", length, " + refstr + "instance);");
+                    cw.WriteLine("DeserializeLength(stream, length, " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
 
                     cw.Summary("Helper: put the buffer into a MemoryStream and create a new instance to deserializing into");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(byte[] buffer" + mTableParamDefs + ")");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(byte[] buffer)");
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
                     cw.WriteLine("using (var ms = new MemoryStream(buffer))");
-                    cw.WriteIndent("Deserialize(ms" + mTableParams + ", " + refstr + "instance);");
+                    cw.WriteIndent("Deserialize(ms, " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
 
                     cw.Summary("Helper: create a new instance when deserializing a JObject");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj" + mTableParamDefs + ")");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj)");
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("Deserialize(obj" + mTableParams + ", " + refstr + "instance);");
+                    cw.WriteLine("Deserialize(obj, " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
 
                     cw.Summary("Helper: create a new instance and deserialize JSON from a string");
-                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(string json" + mTableParamDefs + ")");
+                    cw.Bracket(m.OptionAccess + " static " + m.CsType + " Deserialize(string json)");
                     cw.WriteLine(m.CsType + " instance = new " + m.CsType + "();");
-                    cw.WriteLine("Deserialize(global::Newtonsoft.Json.Linq.JObject.Parse(json)" + mTableParams + ", " + refstr + "instance);");
+                    cw.WriteLine("Deserialize(global::Newtonsoft.Json.Linq.JObject.Parse(json), " + refstr + "instance);");
                     cw.WriteLine("return instance;");
                     cw.EndBracketSpace();
                 }
 
                 if (!m.OptionNoPartials) {
                     cw.Summary("Load this value from a proto buffer");
-                    cw.Bracket(m.OptionAccess + " void FromProto(Stream stream" + mTableParamDefs + ")");
-                    cw.WriteLine("Deserialize(stream" + mTableParams + ", this );");
-                    cw.EndBracketSpace();
-
-                    cw.Summary("Load this value from a json object");
-                    cw.Bracket(m.OptionAccess + " void FromJson(global::Newtonsoft.Json.Linq.JObject obj" + mTableParamDefs + ")");
-                    cw.WriteLine("Deserialize(obj" + mTableParams + ", this );");
+                    cw.Bracket(m.OptionAccess + " void FromProto(Stream stream)");
+                    cw.WriteLine("Deserialize(stream, this );");
                     cw.EndBracketSpace();
                 }
 
             }
 
             cw.Summary("Helper: put the buffer into a MemoryStream before deserializing");
-            cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " Deserialize(byte[] buffer" + mTableParamDefs + ", " + refstr + m.FullCsType + " instance)");
+            cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " Deserialize(byte[] buffer, " + refstr + m.FullCsType + " instance)");
             cw.WriteLine("using (var ms = new MemoryStream(buffer))");
-            cw.WriteIndent("Deserialize(ms" + mTableParams + ", " + refstr + "instance);");
+            cw.WriteIndent("Deserialize(ms, " + refstr + "instance);");
             cw.WriteLine("return instance;");
             cw.EndBracketSpace();
             #endregion
@@ -181,13 +160,13 @@ namespace SilentOrbit.ProtocolBuffers
             foreach (string method in methods) {
                 if (method == "Deserialize") {
                     cw.Summary("Takes the remaining content of the stream and deserialze it into the instance.");
-                    cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " " + method + "(Stream stream" + mTableParamDefs + ", " + refstr + m.FullCsType + " instance)");
+                    cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " " + method + "(Stream stream, " + refstr + m.FullCsType + " instance)");
                 } else if (method == "DeserializeLengthDelimited") {
                     cw.Summary("Read the VarInt length prefix and the given number of bytes from the stream and deserialze it into the instance.");
-                    cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " " + method + "(Stream stream" + mTableParamDefs + ", " + refstr + m.FullCsType + " instance)");
+                    cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " " + method + "(Stream stream, " + refstr + m.FullCsType + " instance)");
                 } else if (method == "DeserializeLength") {
                     cw.Summary("Read the given number of bytes from the stream and deserialze it into the instance.");
-                    cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " " + method + "(Stream stream" + mTableParamDefs + ", int length, " + refstr + m.FullCsType + " instance)");
+                    cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " " + method + "(Stream stream, int length, " + refstr + m.FullCsType + " instance)");
                 } else
                     throw new NotImplementedException();
 
@@ -243,7 +222,7 @@ namespace SilentOrbit.ProtocolBuffers
                         cw.Comment("Field " + f.ID + " " + f.WireType);
                         cw.Indent();
                         cw.Case(((f.ID << 3) | (int) f.WireType));
-                        if (fieldSerializer.FieldReader(f, m.RequiredMessageTables))
+                        if (fieldSerializer.FieldReader(f))
                             cw.WriteLine("continue;");
                     }
                     cw.SwitchEnd();
@@ -264,7 +243,7 @@ namespace SilentOrbit.ProtocolBuffers
                     //Makes sure we got the right wire type
                     cw.WriteLine("if(key.WireType != global::SilentOrbit.ProtocolBuffers.Wire." + f.WireType + ")");
                     cw.WriteIndent("break;"); //This can be changed to throw an exception for unknown formats.
-                    if (fieldSerializer.FieldReader(f, m.RequiredMessageTables))
+                    if (fieldSerializer.FieldReader(f))
                         cw.WriteLine("continue;");
                 }
                 cw.CaseDefault();
@@ -289,7 +268,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             //JSON deserialize
             cw.Summary("Deserializes an instance from a JSON object.");
-            cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj" + mTableParamDefs + ", " + refstr + m.FullCsType + " instance)");
+            cw.Bracket(m.OptionAccess + " static " + m.FullCsType + " Deserialize(global::Newtonsoft.Json.Linq.JObject obj, " + refstr + m.FullCsType + " instance)");
 
             GenerateDefaults(m);
       
@@ -299,7 +278,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             foreach (var f in m.Fields.Values) {
                 cw.Case("\"" + f.CsName + "\"");
-                fieldSerializer.JsonFieldReader(f, m.RequiredMessageTables, "property.Value");
+                fieldSerializer.JsonFieldReader(f, "property.Value");
                 cw.WriteLine("break;");
             }
 
@@ -321,9 +300,6 @@ namespace SilentOrbit.ProtocolBuffers
         /// </summary>
         void GenerateWriter(ProtoMessage m)
         {
-            string mTableParamDefs, mTableParams;
-            FindMessageTableParams(m, out mTableParamDefs, out mTableParams);
-
             string stack = "global::SilentOrbit.ProtocolBuffers.ProtocolParser.Stack";
             if (options.ExperimentalStack != null) {
                 cw.WriteLine("[ThreadStatic]");
@@ -332,7 +308,7 @@ namespace SilentOrbit.ProtocolBuffers
             }
 
             cw.Summary("Serialize the instance into the stream");
-            cw.Bracket(m.OptionAccess + " static void Serialize(Stream stream, " + m.CsType + " instance" + mTableParamDefs + ")");
+            cw.Bracket(m.OptionAccess + " static void Serialize(Stream stream, " + m.CsType + " instance)");
             if (m.OptionTriggers) {
                 cw.WriteLine("instance.BeforeSerialize();");
                 cw.WriteLine();
@@ -361,40 +337,40 @@ namespace SilentOrbit.ProtocolBuffers
 
             if (m.OptionType != "interface" && !m.OptionNoPartials) {
                 cw.Summary("Serialize and return data as a byte array (use this sparingly)");
-                cw.Bracket(m.OptionAccess + " byte[] ToProtoBytes(" + mTableParamDefs.TrimStart(',', ' ') + ")");
-                cw.WriteLine("return SerializeToBytes( this" + mTableParams +" );");
+                cw.Bracket(m.OptionAccess + " byte[] ToProtoBytes()");
+                cw.WriteLine("return SerializeToBytes( this );");
                 cw.EndBracketSpace();
 
                 cw.Summary("Serialize to a Stream");
-                cw.Bracket(m.OptionAccess + " void ToProto( Stream stream" + mTableParamDefs + " )");
-                cw.WriteLine("Serialize( stream, this" + mTableParams + " );");
+                cw.Bracket(m.OptionAccess + " void ToProto( Stream stream )");
+                cw.WriteLine("Serialize( stream, this );");
                 cw.EndBracketSpace();
 
                 cw.Summary("Serialize to a JSON string");
-                cw.Bracket(m.OptionAccess + " string ToJson(" + mTableParamDefs.TrimStart(',', ' ') + ")");
+                cw.Bracket(m.OptionAccess + " string ToJson()");
                 cw.WriteLine("var writer = new global::System.IO.StringWriter();");
-                cw.WriteLine("SerializeJson(writer, this" + mTableParams + ");");
+                cw.WriteLine("SerializeJson(writer, this);");
                 cw.WriteLine("return writer.ToString();");
                 cw.EndBracketSpace();
             }
 
             cw.Summary("Helper: Serialize into a MemoryStream and return its byte array");
-            cw.Bracket(m.OptionAccess + " static byte[] SerializeToBytes(" + m.CsType + " instance" + mTableParamDefs + ")");
+            cw.Bracket(m.OptionAccess + " static byte[] SerializeToBytes(" + m.CsType + " instance)");
             cw.Using("var ms = new MemoryStream()");
-            cw.WriteLine("Serialize(ms, instance" + mTableParams + ");");
+            cw.WriteLine("Serialize(ms, instance);");
             cw.WriteLine("return ms.ToArray();");
             cw.EndBracket();
             cw.EndBracket();
 
             cw.Summary("Helper: Serialize with a varint length prefix");
-            cw.Bracket(m.OptionAccess + " static void SerializeLengthDelimited(Stream stream, " + m.CsType + " instance" + mTableParamDefs + ")");
-            cw.WriteLine("var data = SerializeToBytes(instance" + mTableParams + ");");
+            cw.Bracket(m.OptionAccess + " static void SerializeLengthDelimited(Stream stream, " + m.CsType + " instance)");
+            cw.WriteLine("var data = SerializeToBytes(instance);");
             cw.WriteLine("global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, (uint)data.Length);");
             cw.WriteLine("stream.Write(data, 0, data.Length);");
             cw.EndBracket();
 
             cw.Summary("Serialize into a JSON string");
-            cw.Bracket(m.OptionAccess + " static void SerializeJson(TextWriter writer, " + m.CsType + " instance" + mTableParamDefs + ")");
+            cw.Bracket(m.OptionAccess + " static void SerializeJson(TextWriter writer, " + m.CsType + " instance)");
             cw.WriteLine("writer.Write(\"{\");");
 
             var first = true;

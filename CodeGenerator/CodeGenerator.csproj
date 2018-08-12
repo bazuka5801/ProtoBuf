@@ -64,9 +64,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <EmbeddedResource Include="ProtocolParser\MessageTable.cs">
-      <LogicalName>MessageTable</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="ProtocolParser\ProtocolParser.cs">
       <LogicalName>ProtocolParser</LogicalName>
     </EmbeddedResource>

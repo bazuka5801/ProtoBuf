@@ -82,26 +82,6 @@ namespace SilentOrbit.ProtocolBuffers
             }
         }
 
-        private ProtoMessage[] _messageTables;
-        public ProtoMessage[] RequiredMessageTables { get { return _messageTables ?? (_messageTables = FindMessageTables()); } }
-
-        private ProtoMessage[] FindMessageTables()
-        {
-            var list = new List<ProtoMessage>();
-
-            if (OptionMessageTableInterface) {
-                list.Add(this);
-            }
-
-            foreach (var field in Fields.Values) {
-                var msg = field.ProtoType as ProtoMessage;
-                if (msg == null) continue;
-                list.AddRange(msg.RequiredMessageTables.Where(x => !list.Contains(x)));
-            }
-
-            return list.ToArray();
-        }
-
         /// <summary>
         /// Return the buffer size of the largest field specified in the .proto file.
         /// </summary>

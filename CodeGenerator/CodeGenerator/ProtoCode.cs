@@ -135,8 +135,7 @@ This file will be overwritten when CodeGenerator is run.");
             using (TextWriter codeWriter = new StreamWriter(libPath, false, Encoding.UTF8))
             {
                 codeWriter.NewLine = "\r\n";
-                ReadCode(codeWriter, "MessageTable", true);
-                ReadCode(codeWriter, "ProtocolParser", false);
+                ReadCode(codeWriter, "ProtocolParser", true);
                 ReadCode(codeWriter, "ProtocolParserExceptions", false);
                 ReadCode(codeWriter, "ProtocolParserFixed", false);
                 ReadCode(codeWriter, "ProtocolParserKey", false);

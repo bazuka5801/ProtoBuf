@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace SilentOrbit.ProtocolBuffers
 {
@@ -105,11 +104,6 @@ namespace SilentOrbit.ProtocolBuffers
         /// Don't create new instances of this class
         /// </summary>
         public bool OptionNoInstancing { get; set; }
-
-        /// <summary>
-        /// Use a message table to serialize / deserialize this interface.
-        /// </summary>
-        public bool OptionMessageTableInterface { get; set; }
 
         /// <summary>
         /// Can be "class", "struct" or "interface"
