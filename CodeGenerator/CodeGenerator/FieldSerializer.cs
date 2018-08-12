@@ -356,63 +356,6 @@ namespace SilentOrbit.ProtocolBuffers
             throw new NotImplementedException("Unknown rule: " + f.Rule);
         }
 
-        /// <summary>
-        /// Generates code for writing one field as a JSON string
-        /// </summary>
-        public static void FieldJsonWriter(ProtoMessage m, Field f, CodeWriter cw, Options options)
-        {
-            cw.WriteLine("writer.Write(\"\\\"" + f.ProtoName + "\\\":\");");
-            if (f.Rule == FieldRule.Repeated) {
-                cw.WriteLine();
-                cw.IfBracket("instance." + f.CsName + " != null");
-                cw.WriteLine("writer.Write(\"[\");");
-                cw.WriteLine("var first = true;");
-                cw.ForeachBracket("var i" + f.ID + " in instance." + f.CsName);
-                cw.WriteLine("if (!first) writer.Write(\",\");");
-                cw.WriteLine("else first = false;");
-                cw.WriteLine(FieldWriterJsonType(f, "writer", "i" + f.ID));
-                cw.EndBracket();
-                cw.WriteLine("writer.Write(\"]\");");
-                cw.ElseBracket();
-                cw.WriteLine("writer.Write(\"null\");");
-                cw.EndBracket();
-                return;
-            } else if (f.Rule == FieldRule.Optional) {
-                if (options.Nullable ||
-                    f.ProtoType is ProtoMessage ||
-                    f.ProtoType.ProtoName == ProtoBuiltin.String ||
-                    f.ProtoType.ProtoName == ProtoBuiltin.Bytes) {
-                    if (f.ProtoType.Nullable || options.Nullable) //Struct always exist, not optional
-                        cw.IfBracket("instance." + f.CsName + " != null");
-                    var needValue = !f.ProtoType.Nullable && options.Nullable;
-                    cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName + (needValue ? ".Value" : "")));
-                    if (f.ProtoType.Nullable || options.Nullable) //Struct always exist, not optional
-                        cw.EndBracket();
-                    return;
-                }
-                if (f.ProtoType is ProtoEnum) {
-                    if (f.OptionDefault != null)
-                        cw.IfBracket("instance." + f.CsName + " != " + f.ProtoType.CsType + "." + f.OptionDefault);
-                    cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName));
-                    if (f.OptionDefault != null)
-                        cw.EndBracket();
-                    return;
-                }
-                cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName));
-                return;
-            } else if (f.Rule == FieldRule.Required) {
-                if (f.ProtoType is ProtoMessage && f.ProtoType.OptionType != "struct" ||
-                    f.ProtoType.ProtoName == ProtoBuiltin.String ||
-                    f.ProtoType.ProtoName == ProtoBuiltin.Bytes) {
-                    cw.WriteLine("if (instance." + f.CsName + " == null)");
-                    cw.WriteIndent("throw new ArgumentNullException(\"" + f.CsName + "\", \"Required by proto specification.\");");
-                }
-                cw.WriteLine(FieldWriterJsonType(f, "writer", "instance." + f.CsName));
-                return;
-            }
-            throw new NotImplementedException("Unknown rule: " + f.Rule);
-        }
-
         static string FieldWriterType(Field f, string stream, string binaryWriter, string instance)
         {
             if (f.OptionCodeType != null)
@@ -476,42 +419,6 @@ namespace SilentOrbit.ProtocolBuffers
 
             throw new NotImplementedException();
         }
-
-        static string FieldWriterJsonType(Field f, string writer, string instance)
-        {
-            if (f.OptionCodeType != null) {
-                switch (f.OptionCodeType) {
-                    case "DateTime":
-                    case "TimeSpan":
-                        return FieldWriterJsonPrimitive(f, writer, instance + ".Ticks");
-                }
-            }
-            return FieldWriterJsonPrimitive(f, writer, instance);
-        }
-        static string FieldWriterJsonPrimitive(Field f, string writer, string instance)
-        {
-            if (f.ProtoType is ProtoEnum)
-                return writer + ".Write(" + instance + ".ToString());";
-
-            if (f.ProtoType is ProtoMessage) {
-                ProtoMessage pm = f.ProtoType as ProtoMessage;
-                CodeWriter cw = new CodeWriter();
-                cw.WriteLine(pm.FullSerializerType + ".SerializeJson(" + writer + ", " + instance + ");");
-                return cw.Code;
-            }
-
-            switch (f.ProtoType.ProtoName) {
-                case ProtoBuiltin.Bool:
-                    return writer + ".Write(" + instance + " ? \"true\" : \"false\");";
-                case ProtoBuiltin.String:
-                    return writer + ".Write(new global::Newtonsoft.Json.Linq.JValue(" + instance + ").ToString(global::Newtonsoft.Json.Formatting.None));";
-                case ProtoBuiltin.Bytes:
-                    return writer + ".Write(" + instance + " == null ? \"null\" : (\"\\\"\" + global::System.Convert.ToBase64String(" + instance + ") + \"\\\"\"));";
-                default:
-                    return writer + ".Write(" + instance + ".ToString());";
-            }
-        }
-
         #endregion
     }
 }
