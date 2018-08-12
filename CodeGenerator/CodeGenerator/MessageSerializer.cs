@@ -18,6 +18,10 @@ namespace SilentOrbit.ProtocolBuffers
 
         public void GenerateClassSerializer(ProtoMessage m)
         {
+            if (m.OptionNoPartials)
+            {
+                return;
+            }
             String identName = null;
 
             if (m.OptionIdentifier > 0) {
