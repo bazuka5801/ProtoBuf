@@ -19,7 +19,7 @@ namespace SilentOrbit.ProtocolBuffers
                 cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.SerializerType);
             }
 
-            GenerateReader(m, cw);
+            GenerateReader(m, cw, options);
 
             GenerateWriter(m, cw, options);
             foreach (ProtoMessage sub in m.Messages.Values)
@@ -32,7 +32,48 @@ namespace SilentOrbit.ProtocolBuffers
             return;
         }
 
-        static void GenerateReader(ProtoMessage m, CodeWriter cw)
+        static void GenerateDefaults(ProtoMessage m, CodeWriter cw, Options options)
+        {
+            foreach (Field f in m.Fields.Values)
+            {
+                if (f.Rule == FieldRule.Repeated)
+                {
+                    //Initialize lists of the custom DateTime or TimeSpan type.
+                    string csType = f.ProtoType.FullCsType;
+                    if (f.OptionCodeType != null)
+                        csType = f.OptionCodeType;
+
+                    cw.WriteLine("if (instance." + f.CsName + " == null)");
+                    cw.WriteIndent("instance." + f.CsName + " = new List<" + csType + ">();");
+                }
+                else if (f.OptionDefault != null)
+                {
+                    if (options.Properties)
+                    {
+                        if (f.ProtoType is ProtoEnum)
+                            cw.WriteLine("instance." + f.CsName + " = " + f.ProtoType.FullCsType + "." +
+                                         f.OptionDefault + ";");
+                        else
+                            cw.WriteLine("instance." + f.CsName + " = " + f.FormatForTypeAssignment() + ";");
+                    }
+                }
+                else if (f.Rule == FieldRule.Optional)
+                {
+                    if (f.ProtoType is ProtoEnum)
+                    {
+                        ProtoEnum pe = f.ProtoType as ProtoEnum;
+                        //the default value is the first value listed in the enum's type definition
+                        foreach (var kvp in pe.Enums)
+                        {
+                            cw.WriteLine("instance." + f.CsName + " = " + pe.FullCsType + "." + kvp.Name + ";");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        static void GenerateReader(ProtoMessage m, CodeWriter cw, Options options)
         {
             #region Helper Deserialize Methods
             string refstr = (m.OptionType == "struct") ? "ref " : "";
@@ -107,40 +148,7 @@ namespace SilentOrbit.ProtocolBuffers
                 if (m.IsUsingBinaryWriter)
                     cw.WriteLine("BinaryReader br = new BinaryReader(stream);");
 
-                //Prepare List<> and default values
-                foreach (Field f in m.Fields.Values)
-                {
-                    if (f.Rule == FieldRule.Repeated)
-                    {
-                        //Initialize lists of the custom DateTime or TimeSpan type.
-                        string csType = f.ProtoType.FullCsType;
-                        if (f.OptionCodeType != null)
-                            csType = f.OptionCodeType;
-
-                        cw.WriteLine("if (instance." + f.CsName + " == null)");
-                        cw.WriteIndent("instance." + f.CsName + " = new List<" + csType + ">();");
-                    }
-                    else if (f.OptionDefault != null)
-                    {
-                        if (f.ProtoType is ProtoEnum)
-                            cw.WriteLine("instance." + f.CsName + " = " + f.ProtoType.FullCsType + "." + f.OptionDefault + ";");
-                        else
-                            cw.WriteLine("instance." + f.CsName + " = " + f.OptionDefault + ";");
-                    }
-                    else if (f.Rule == FieldRule.Optional)
-                    {
-                        if (f.ProtoType is ProtoEnum)
-                        {
-                            ProtoEnum pe = f.ProtoType as ProtoEnum;
-                            //the default value is the first value listed in the enum's type definition
-                            foreach (var kvp in pe.Enums)
-                            {
-                                cw.WriteLine("instance." + f.CsName + " = " + pe.FullCsType + "." + kvp.Name + ";");
-                                break;
-                            }
-                        }
-                    }
-                }
+                GenerateDefaults(m, cw, options);
 
                 if (method == "DeserializeLengthDelimited")
                 {

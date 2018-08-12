@@ -110,6 +110,29 @@ namespace SilentOrbit.ProtocolBuffers
                 return ProtoType.WireType;
             }
         }
+        
+        /// <summary>
+        /// Format the specified value according to the field type.
+        /// </summary>
+        /// <returns>String that can be use to assign to field of this field's type.</returns>
+        /// <param name="value">Value.</param>
+        public string FormatForTypeAssignment()
+        {
+            if (OptionDefault == null)
+                throw new InvalidOperationException("Missing default value");
+
+            if (this.ProtoType is ProtoEnum)
+                return this.ProtoType.FullCsType + "." + OptionDefault;
+
+            if (ProtoTypeName == "string")
+                return $"\"{OptionDefault}\"";
+
+            if (ProtoTypeName == "float")
+                return OptionDefault + "f";
+
+            return OptionDefault;
+        }
+        
         #region Code Generation Properties
         //These are generated as a second stage parsing of the .proto file.
         //They are used in the code generation.

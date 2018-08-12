@@ -44,6 +44,12 @@ namespace SilentOrbit.ProtocolBuffers
         [Option("experimental-message-stack", HelpText = "Assign the name of the stack implementatino to use for each message type, included options are ThreadSafeStack, ThreadUnsafeStack, ConcurrentBagStack or the full namespace to your own implementation.")]
         public string ExperimentalStack { get; set; }
 
+        /// <summary>
+        /// If set properties will be generated isnstead of field
+        /// </summary>
+        [Option("properties", Required = false, HelpText = "Generate properties instead of fields")]
+        public bool Properties { get; set; }
+        
         public static Options Parse(string[] args)
         {
             var result = Parser.Default.ParseArguments<Options>(args);

@@ -21,7 +21,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             GenerateEnums(m, cw);
 
-            GenerateProperties(m, cw);
+            GenerateProperties(m, cw, options);
 
             //if(options.GenerateToString...
             // ...
@@ -75,17 +75,17 @@ namespace SilentOrbit.ProtocolBuffers
         /// <param name='template'>
         /// if true it will generate only properties that are not included by default, because of the [generate=false] option.
         /// </param>
-        static void GenerateProperties(ProtoMessage m, CodeWriter cw)
+        static void GenerateProperties(ProtoMessage m, CodeWriter cw, Options options)
         {
             foreach (Field f in m.Fields.Values)
             {
                 if (f.OptionExternal)
-                    cw.WriteLine("//" + GenerateProperty(f) + " // Implemented by user elsewhere");
+                    cw.WriteLine("//" + GenerateProperty(f, options) + " // Implemented by user elsewhere");
                 else
                 {
                     if (f.Comments != null)
                         cw.Summary(f.Comments);
-                    cw.WriteLine(GenerateProperty(f));
+                    cw.WriteLine(GenerateProperty(f, options));
                     cw.WriteLine();
                 }
 
@@ -101,7 +101,7 @@ namespace SilentOrbit.ProtocolBuffers
 #endif
         }
 
-        static string GenerateProperty(Field f)
+        static string GenerateProperty(Field f, Options options)
         {
             string type = f.ProtoType.FullCsType;
             if (f.OptionCodeType != null)
@@ -114,7 +114,12 @@ namespace SilentOrbit.ProtocolBuffers
             else if (f.ProtoType is ProtoMessage && f.ProtoType.OptionType == "struct")
                 return f.OptionAccess + " " + type + " " + f.CsName + ";";
             else
-                return f.OptionAccess + " " + type + " " + f.CsName + " { get; set; }";
+            {
+                string ret = f.OptionAccess + " " + type + " " + f.CsName;
+                string defValue = string.IsNullOrEmpty(f.OptionDefault) == false ? $" = {f.FormatForTypeAssignment()}" : "";
+                ret += options.Properties ? " { get; set; }" : $"{defValue};";
+                return ret;
+            }
         }
     }
 }
