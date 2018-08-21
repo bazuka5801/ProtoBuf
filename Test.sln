@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestB", "Test\TestB\TestB.c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{2BEA16CC-48D6-4FC7-9DF9-606ADC3428F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNew", "Test\TestNew\TestNew.csproj", "{B1A7BA7F-2A81-4F3B-A106-D2FB94042DA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{C068143A-07C2-48BE-9EDB-08A05E8153CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C068143A-07C2-48BE-9EDB-08A05E8153CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C068143A-07C2-48BE-9EDB-08A05E8153CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A7BA7F-2A81-4F3B-A106-D2FB94042DA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A7BA7F-2A81-4F3B-A106-D2FB94042DA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A7BA7F-2A81-4F3B-A106-D2FB94042DA1}.Release|Any CPU.ActiveCfg = Release|x64
+		{B1A7BA7F-2A81-4F3B-A106-D2FB94042DA1}.Release|Any CPU.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Test\Test.csproj

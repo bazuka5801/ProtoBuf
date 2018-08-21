@@ -11,6 +11,8 @@ namespace SilentOrbit.ProtocolBuffers
 {
     public static partial class ProtocolParser
     {
+        private static byte[] staticBuffer = new byte[131072];
+
         public static string ReadString(Stream stream)
         {
             return Encoding.UTF8.GetString(ReadBytes(stream));
@@ -64,14 +66,28 @@ namespace SilentOrbit.ProtocolBuffers
             stream.Write(val, 0, val.Length);
         }
 
-    }
-
-    [Obsolete("Renamed to PositionStream")]
-    public class StreamRead : PositionStream
-    {
-        public StreamRead (Stream baseStream) : base(baseStream)
+        public static float ReadSingle(Stream stream)
         {
-            
+            stream.Read(ProtocolParser.staticBuffer, 0, 4);
+            return ProtocolParser.staticBuffer.ReadFloat(0);
+        }
+        
+        public static void WriteSingle(Stream stream, float f)
+        {
+            ProtocolParser.staticBuffer.WriteFloat(f, 0);
+            stream.Write(ProtocolParser.staticBuffer, 0, 4);
+        }
+        
+        public static double ReadDouble(Stream stream)
+        {
+            stream.Read(ProtocolParser.staticBuffer, 0, 8);
+            return ProtocolParser.staticBuffer.ReadDouble(0);
+        }
+        
+        public static void WriteDouble(Stream stream, double f)
+        {
+            ProtocolParser.staticBuffer.WriteDouble(f, 0);
+            stream.Write(ProtocolParser.staticBuffer, 0, 8);
         }
     }
 

@@ -43,10 +43,7 @@ namespace SilentOrbit.ProtocolBuffers
             }
         }
 
-        public virtual string FullCsType
-        {
-            get { return CsNamespace + "." + CsType; }
-        }
+        public virtual string FullCsType => CsNamespace + "." + CsType;
 
         /// <summary>
         /// The C# namespace for this item

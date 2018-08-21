@@ -11,12 +11,12 @@ namespace SilentOrbit.ProtocolBuffers
         /// <summary>
         /// Convert message/class and field/propery names to CamelCase
         /// </summary>
-        bool ConvertToCamelCase = true;
+        readonly bool ConvertToCamelCase = false;
 
         public ProtoPrepare(Options options)
         {
-            if (options.PreserveNames)
-                ConvertToCamelCase = false;
+            if (options.ConvertToCamelCase)
+                ConvertToCamelCase = true;
 
             this.options = options;
         }
@@ -161,18 +161,6 @@ namespace SilentOrbit.ProtocolBuffers
                     return new ProtoBuiltin(type, Wire.Varint, "uint");
                 case "uint64":
                     return new ProtoBuiltin(type, Wire.Varint, "ulong");
-                case "sint32":
-                    return new ProtoBuiltin(type, Wire.Varint, "int");
-                case "sint64":
-                    return new ProtoBuiltin(type, Wire.Varint, "long");
-                case "fixed32":
-                    return new ProtoBuiltin(type, Wire.Fixed32, "uint");
-                case "fixed64":
-                    return new ProtoBuiltin(type, Wire.Fixed64, "ulong");
-                case "sfixed32":
-                    return new ProtoBuiltin(type, Wire.Fixed32, "int");
-                case "sfixed64":
-                    return new ProtoBuiltin(type, Wire.Fixed64, "long");
                 case "bool":
                     return new ProtoBuiltin(type, Wire.Varint, "bool");
                 case "string":

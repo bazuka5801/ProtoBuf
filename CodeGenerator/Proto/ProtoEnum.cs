@@ -5,10 +5,7 @@ namespace SilentOrbit.ProtocolBuffers
 {
     class ProtoEnum : ProtoType, IComment
     {
-        public override Wire WireType
-        {
-            get { return Wire.Varint; }
-        }
+        public override Wire WireType => Wire.Varint;
 
         public string Comments { get; set; }
 

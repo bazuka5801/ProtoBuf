@@ -24,6 +24,18 @@ namespace SilentOrbit.ProtocolBuffers
             if (Directory.Exists(csDir) == false)
                 Directory.CreateDirectory(csDir);
 
+            List<string> customUsings = new List<string>();
+            
+            
+            if (string.IsNullOrEmpty(options.Usings) == false)
+            {
+                var usings = options.Usings.Split(';');
+                foreach (var @using in usings)
+                {
+                    customUsings.Add($"using {@using};");
+                }
+            }
+            
             //Basic structures
             using (var cw = new CodeWriter(csPath))
             {
@@ -40,6 +52,7 @@ then write the code and the changes in a separate file.");
 
                 cw.WriteLine("using System;");
                 cw.WriteLine("using System.Collections.Generic;");
+                customUsings.ForEach(cw.WriteLine);
                 cw.WriteLine();
 
                 string ns = null; //avoid writing namespace between classes if they belong to the same
@@ -89,6 +102,7 @@ This file will be overwritten when CodeGenerator is run.");
                 cw.WriteLine("using System.IO;");
                 cw.WriteLine("using System.Text;");
                 cw.WriteLine("using System.Collections.Generic;");
+                customUsings.ForEach(cw.WriteLine);
                 cw.WriteLine();
 
                 string ns = null; //avoid writing namespace between classes if they belong to the same
@@ -112,9 +126,7 @@ This file will be overwritten when CodeGenerator is run.");
                 codeWriter.NewLine = "\r\n";
                 ReadCode(codeWriter, "ProtocolParser", true);
                 ReadCode(codeWriter, "ProtocolParserExceptions", false);
-                ReadCode(codeWriter, "ProtocolParserFixed", false);
                 ReadCode(codeWriter, "ProtocolParserKey", false);
-                ReadCode(codeWriter, "ProtocolParserMemory", false);
                 ReadCode(codeWriter, "ProtocolParserVarInt", false);
             }
         }

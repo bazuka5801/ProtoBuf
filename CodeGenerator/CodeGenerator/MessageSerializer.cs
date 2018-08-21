@@ -19,8 +19,8 @@ namespace SilentOrbit.ProtocolBuffers
             }
 
             GenerateReader(m, cw, options);
-
             GenerateWriter(m, cw, options);
+            
             foreach (ProtoMessage sub in m.Messages.Values)
             {
                 cw.WriteLine();
@@ -144,9 +144,6 @@ namespace SilentOrbit.ProtocolBuffers
                 else
                     throw new NotImplementedException();
 
-                if (m.IsUsingBinaryWriter)
-                    cw.WriteLine("BinaryReader br = new BinaryReader(stream);");
-
                 GenerateDefaults(m, cw, options);
 
                 if (method == "DeserializeLengthDelimited")
@@ -259,14 +256,6 @@ namespace SilentOrbit.ProtocolBuffers
         /// </summary>
         static void GenerateWriter(ProtoMessage m, CodeWriter cw, Options options)
         {
-            string stack = "global::SilentOrbit.ProtocolBuffers.ProtocolParser.Stack";
-            if (options.ExperimentalStack != null)
-            {
-                cw.WriteLine("[ThreadStatic]");
-                cw.WriteLine("static global::SilentOrbit.ProtocolBuffers.MemoryStreamStack stack = new " + options.ExperimentalStack + "();");
-                stack = "stack";
-            }
-
             cw.Summary("Serialize the instance into the stream");
             cw.Bracket(m.OptionAccess + " static void Serialize(Stream stream, " + m.CsType + " instance)");
             if (m.OptionTriggers)
@@ -274,16 +263,14 @@ namespace SilentOrbit.ProtocolBuffers
                 cw.WriteLine("instance.BeforeSerialize();");
                 cw.WriteLine();
             }
-            if (m.IsUsingBinaryWriter)
-                cw.WriteLine("BinaryWriter bw = new BinaryWriter(stream);");
 
             //Shared memorystream for all fields
-            cw.WriteLine("var msField = " + stack + ".Pop();");
+            cw.WriteLine("var msField = Pool.Get<MemoryStream>();");
 
             foreach (Field f in m.Fields.Values)
                 FieldSerializer.FieldWriter(m, f, cw);
 
-            cw.WriteLine(stack + ".Push(msField);");
+            cw.WriteLine("Pool.FreeMemoryStream(ref msField);");
 
             if (m.OptionPreserveUnknown)
             {

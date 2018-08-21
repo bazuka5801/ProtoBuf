@@ -16,21 +16,9 @@ namespace SilentOrbit.ProtocolBuffers
             this.Path = path;
         }
 
-        public string Parsed
-        {
-            get
-            {
-                return text.Substring(0, offset);
-            }
-        }
+        public string Parsed => text.Substring(0, offset);
 
-        public char NextCharacter
-        {
-            get
-            {
-                return text[offset];
-            }
-        }
+        public char NextCharacter => text[offset];
 
         int offset;
 

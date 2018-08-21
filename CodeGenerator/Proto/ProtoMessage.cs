@@ -5,10 +5,7 @@ namespace SilentOrbit.ProtocolBuffers
 {
     class ProtoMessage : ProtoType, IComment
     {
-        public override Wire WireType
-        {
-            get { return Wire.LengthDelimited; }
-        }
+        public override Wire WireType => Wire.LengthDelimited;
 
         public string Comments { get; set; }
 
@@ -47,17 +44,6 @@ namespace SilentOrbit.ProtocolBuffers
         public override string ToString()
         {
             return "message " + FullProtoName;
-        }
-
-        public bool IsUsingBinaryWriter
-        {
-            get
-            {
-                foreach (Field f in Fields.Values)
-                    if (f.IsUsingBinaryWriter)
-                        return true;
-                return false;
-            }
         }
 
         /// <summary>

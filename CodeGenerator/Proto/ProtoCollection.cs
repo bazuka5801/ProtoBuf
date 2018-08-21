@@ -16,13 +16,7 @@ namespace SilentOrbit.ProtocolBuffers
         /// <summary>
         /// Defaults to Example if not specified
         /// </summary>
-        public override string CsNamespace
-        {
-            get
-            {
-                throw new InvalidOperationException("This is a collection of multiple .proto files with different namespaces, namespace should have been set at local.");
-            }
-        }
+        public override string CsNamespace => throw new InvalidOperationException("This is a collection of multiple .proto files with different namespaces, namespace should have been set at local.");
 
         public void Merge(ProtoCollection proto)
         {

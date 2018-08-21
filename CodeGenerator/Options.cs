@@ -14,8 +14,8 @@ namespace SilentOrbit.ProtocolBuffers
         /// <summary>
         /// Convert message/class and field/propery names to CamelCase
         /// </summary>
-        [Option("preserve-names", HelpText = "Keep names as written in .proto, otherwise class and field names by default are converted to CamelCase")]
-        public bool PreserveNames { get; set; }
+        [Option("cc-names", HelpText = "Convert names to CamelCase")]
+        public bool ConvertToCamelCase { get; set; }
 
         /// <summary>
         /// If false, an error will occur.
@@ -39,16 +39,16 @@ namespace SilentOrbit.ProtocolBuffers
         public string OutputPath { get; set; }
 
         /// <summary>
-        /// Use experimental stack per message type
-        /// </summary>
-        [Option("experimental-message-stack", HelpText = "Assign the name of the stack implementatino to use for each message type, included options are ThreadSafeStack, ThreadUnsafeStack, ConcurrentBagStack or the full namespace to your own implementation.")]
-        public string ExperimentalStack { get; set; }
-
-        /// <summary>
         /// If set properties will be generated isnstead of field
         /// </summary>
         [Option("properties", Required = false, HelpText = "Generate properties instead of fields")]
         public bool Properties { get; set; }
+        
+        /// <summary>
+        /// Custom usings for message serialization class
+        /// </summary>
+        [Option('u', "usings", Required = false, HelpText = "Custom usings for message serialization class (split by ';')")]
+        public string Usings { get; set; }
         
         public static Options Parse(string[] args)
         {
@@ -91,9 +91,6 @@ namespace SilentOrbit.ProtocolBuffers
                 options.OutputPath = Path.Combine(options.OutputPath, Path.GetFileName(firstPathCs));
             }
             options.OutputPath = Path.GetFullPath(options.OutputPath);
-
-            if (options.ExperimentalStack != null && !options.ExperimentalStack.Contains("."))
-                options.ExperimentalStack = "global::SilentOrbit.ProtocolBuffers." + options.ExperimentalStack;
 
             if(error)
                 return null;

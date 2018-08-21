@@ -64,17 +64,11 @@
     <EmbeddedResource Include="ProtocolParser\ProtocolParser.cs">
       <LogicalName>ProtocolParser</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="ProtocolParser\ProtocolParserFixed.cs">
-      <LogicalName>ProtocolParserFixed</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="ProtocolParser\ProtocolParserKey.cs">
       <LogicalName>ProtocolParserKey</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="ProtocolParser\ProtocolParserVarInt.cs">
       <LogicalName>ProtocolParserVarInt</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ProtocolParser\ProtocolParserMemory.cs">
-      <LogicalName>ProtocolParserMemory</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="ProtocolParser\ProtocolParserExceptions.cs">
       <LogicalName>ProtocolParserExceptions</LogicalName>

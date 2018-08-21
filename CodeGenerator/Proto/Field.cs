@@ -46,17 +46,6 @@ namespace SilentOrbit.ProtocolBuffers
         public bool OptionDeprecated = false;
         public string OptionDefault = null;
 
-        public bool IsUsingBinaryWriter
-        {
-            get
-            {
-                if (ProtoType.WireType == Wire.Fixed32)
-                    return true;
-                if (ProtoType.WireType == Wire.Fixed64)
-                    return true;
-                return false;
-            }
-        }
         #region Locally used fields
         //These options are not the build in ones and have a meaning in the code generation
         /// <summary>

@@ -42,29 +42,7 @@ namespace SilentOrbit.ProtocolBuffers
             return ret;
         }
 
-        #region VarInt: int32, uint32, sint32
-
-        [Obsolete("Use (int)ReadUInt64(stream); //yes 64")]
-        /// <summary>
-        /// Since the int32 format is inefficient for negative numbers we have avoided to implement it.
-        /// The same functionality can be achieved using: (int)ReadUInt64(stream);
-        /// </summary>
-        public static int ReadInt32(Stream stream)
-        {
-            return (int)ReadUInt64(stream);
-        }
-
-        [Obsolete("Use WriteUInt64(stream, (ulong)val); //yes 64, negative numbers are encoded that way")]
-        /// <summary>
-        /// Since the int32 format is inefficient for negative numbers we have avoided to imlplement.
-        /// The same functionality can be achieved using: WriteUInt64(stream, (uint)val);
-        /// Note that 64 must always be used for int32 to generate the ten byte wire format.
-        /// </summary>
-        public static void WriteInt32(Stream stream, int val)
-        {
-            //signed varint is always encoded as 64 but values!
-            WriteUInt64(stream, (ulong)val);
-        }
+        #region VarInt: int32, uint32
 
         /// <summary>
         /// Zig-zag signed VarInt format
@@ -137,45 +115,8 @@ namespace SilentOrbit.ProtocolBuffers
 
         #endregion
 
-        #region VarInt: int64, UInt64, SInt64
-
-        [Obsolete("Use (long)ReadUInt64(stream); instead")]
-        /// <summary>
-        /// Since the int64 format is inefficient for negative numbers we have avoided to implement it.
-        /// The same functionality can be achieved using: (long)ReadUInt64(stream);
-        /// </summary>
-        public static int ReadInt64(Stream stream)
-        {
-            return (int)ReadUInt64(stream);
-        }
-
-        [Obsolete("Use WriteUInt64 (stream, (ulong)val); instead")]
-        /// <summary>
-        /// Since the int64 format is inefficient for negative numbers we have avoided to implement.
-        /// The same functionality can be achieved using: WriteUInt64 (stream, (ulong)val);
-        /// </summary>
-        public static void WriteInt64(Stream stream, int val)
-        {
-            WriteUInt64(stream, (ulong)val);
-        }
-
-        /// <summary>
-        /// Zig-zag signed VarInt format
-        /// </summary>
-        public static long ReadZInt64(Stream stream)
-        {
-            ulong val = ReadUInt64(stream);
-            return (long)(val >> 1) ^ ((long)(val << 63) >> 63);
-        }
-
-        /// <summary>
-        /// Zig-zag signed VarInt format
-        /// </summary>
-        public static void WriteZInt64(Stream stream, long val)
-        {
-            WriteUInt64(stream, (ulong)((val << 1) ^ (val >> 63)));
-        }
-
+        #region VarInt: UInt6
+        
         /// <summary>
         /// Unsigned VarInt format
         /// </summary>
