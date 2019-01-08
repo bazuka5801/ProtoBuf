@@ -223,8 +223,8 @@ namespace SilentOrbit.ProtocolBuffers
 
         /// <summary>
         /// Generates code for writing one field
-        /// </summary>
-        public static void FieldWriter(ProtoMessage m, Field f, CodeWriter cw)
+        /// </summary> 
+        public static void FieldWriter(ProtoMessage m, Field f, CodeWriter cw, bool delta)
         {
             if (f.Rule == FieldRule.Repeated)
             {
@@ -240,7 +240,7 @@ namespace SilentOrbit.ProtocolBuffers
                         cw.WriteLine("msField.SetLength(0);");
 
                         cw.ForeachBracket("var i" + f.ID + " in instance." + f.CsName);
-                        cw.WriteLine(FieldWriterType(f, "msField", "i" + f.ID));
+                        cw.WriteLine(FieldWriterType(f, "msField", "i" + f.ID, false, ""));
                         cw.EndBracket();
 
                         BytesWriter(f, "stream", cw);
@@ -254,7 +254,7 @@ namespace SilentOrbit.ProtocolBuffers
                         cw.WriteLine("global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, " + f.ProtoType.WireSize + "u * (uint)instance." + f.CsName + ".Count);");
 
                         cw.ForeachBracket("var i" + f.ID + " in instance." + f.CsName);
-                        cw.WriteLine(FieldWriterType(f, "stream", "i" + f.ID));
+                        cw.WriteLine(FieldWriterType(f, "stream", "i" + f.ID, false, ""));
                         cw.EndBracket();
                     }
                     cw.EndBracket();
@@ -265,7 +265,7 @@ namespace SilentOrbit.ProtocolBuffers
                     cw.IfBracket("instance." + f.CsName + " != null");
                     cw.ForeachBracket("var i" + f.ID + " in instance." + f.CsName);
                     KeyWriter("stream", f.ID, f.ProtoType.WireType, cw);
-                    cw.WriteLine(FieldWriterType(f, "stream", "i" + f.ID));
+                    cw.WriteLine(FieldWriterType(f, "stream", "i" + f.ID, false, ""));
                     cw.EndBracket();
                     cw.EndBracket();
                 }
@@ -280,7 +280,7 @@ namespace SilentOrbit.ProtocolBuffers
                     if (f.ProtoType.Nullable) //Struct always exist, not optional
                         cw.IfBracket("instance." + f.CsName + " != null");
                     KeyWriter("stream", f.ID, f.ProtoType.WireType, cw);
-                    cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName));
+                    cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName, delta, $"previous.{f.CsName}"));
                     if (f.ProtoType.Nullable) //Struct always exist, not optional
                         cw.EndBracket();
                     return;
@@ -290,13 +290,13 @@ namespace SilentOrbit.ProtocolBuffers
                     if (f.OptionDefault != null)
                         cw.IfBracket("instance." + f.CsName + " != " + f.ProtoType.CsType + "." + f.OptionDefault);
                     KeyWriter("stream", f.ID, f.ProtoType.WireType, cw);
-                    cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName));
+                    cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName, delta, $"previous.{f.CsName}"));
                     if (f.OptionDefault != null)
                         cw.EndBracket();
                     return;
                 }
                 KeyWriter("stream", f.ID, f.ProtoType.WireType, cw);
-                cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName));
+                cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName, delta, $"previous.{f.CsName}"));
                 return;
             }
             else if (f.Rule == FieldRule.Required)
@@ -309,13 +309,13 @@ namespace SilentOrbit.ProtocolBuffers
                     cw.WriteIndent("throw new ArgumentNullException(\"" + f.CsName + "\", \"Required by proto specification.\");");
                 }
                 KeyWriter("stream", f.ID, f.ProtoType.WireType, cw);
-                cw.WriteLine(FieldWriterType(f, "stream", "instance." + f.CsName));
+                cw.WriteLine(FieldWriterType(f, "stream", $"instance.{f.CsName}", delta, $"previous.{f.CsName}"));
                 return;
             }
             throw new NotImplementedException("Unknown rule: " + f.Rule);
         }
 
-        static string FieldWriterType(Field f, string stream, string instance)
+        static string FieldWriterType(Field f, string stream, string instance, bool delta, string previous)
         {
             if (f.OptionCodeType != null)
             {
@@ -323,15 +323,15 @@ namespace SilentOrbit.ProtocolBuffers
                 {
                     case "DateTime":
                     case "TimeSpan":
-                        return FieldWriterPrimitive(f, stream, instance + ".Ticks");
+                        return FieldWriterPrimitive(f, stream, instance + ".Ticks", delta, previous);
                     default: //enum
                         break;
                 }
             }
-            return FieldWriterPrimitive(f, stream, instance);
+            return FieldWriterPrimitive(f, stream, instance, delta, previous);
         }
 
-        static string FieldWriterPrimitive(Field f, string stream, string instance)
+        static string FieldWriterPrimitive(Field f, string stream, string instance, bool delta, string previous)
         {
 
             if (f.ProtoType is ProtoEnum)
@@ -341,7 +341,15 @@ namespace SilentOrbit.ProtocolBuffers
             {
                 CodeWriter cw = new CodeWriter();
                 cw.WriteLine("msField.SetLength(0);");
-                cw.WriteLine(pm.FullSerializerType + ".Serialize(msField, " + instance + ");");
+                if (delta)
+                {
+                    cw.WriteLine($"{pm.FullSerializerType}.SerializeDelta(msField, {instance}, {previous});");
+                }
+                else
+                {
+                    cw.WriteLine(pm.FullSerializerType + ".Serialize(msField, " + instance + ");");
+                }
+
                 BytesWriter(f, stream, cw);
                 return cw.Code;
             }

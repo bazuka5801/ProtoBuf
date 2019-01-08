@@ -17,7 +17,7 @@ namespace SilentOrbit.ProtocolBuffers
 
             //Default class
             cw.Summary(m.Comments);
-            cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.CsType);
+            cw.Bracket(m.OptionAccess + " partial " + m.OptionType + " " + m.CsType + " : IDisposable, Pool.IPooled, IProto");
 
             GenerateEnums(m, cw);
 

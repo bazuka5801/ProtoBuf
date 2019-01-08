@@ -50,6 +50,12 @@ namespace SilentOrbit.ProtocolBuffers
         [Option('u', "usings", Required = false, HelpText = "Custom usings for message serialization class (split by ';')")]
         public string Usings { get; set; }
         
+        /// <summary>
+        /// Exclude ProtoParser file
+        /// </summary>
+        [Option("exclude-protoparser", Required = false, HelpText = "Exclude ProtoParser file")]
+        public bool ExcludeProtoParser { get; set; }
+        
         public static Options Parse(string[] args)
         {
             var result = Parser.Default.ParseArguments<Options>(args);

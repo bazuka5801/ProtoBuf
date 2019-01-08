@@ -52,6 +52,7 @@ then write the code and the changes in a separate file.");
 
                 cw.WriteLine("using System;");
                 cw.WriteLine("using System.Collections.Generic;");
+                cw.WriteLine("using SilentOrbit.ProtocolBuffers;");
                 customUsings.ForEach(cw.WriteLine);
                 cw.WriteLine();
 
@@ -120,14 +121,17 @@ This file will be overwritten when CodeGenerator is run.");
                 cw.EndBracket();
             }
 
-            string libPath = Path.Combine(Path.GetDirectoryName(csPath), "ProtocolParser.cs");
-            using (TextWriter codeWriter = new StreamWriter(libPath, false, Encoding.UTF8))
+            if (options.ExcludeProtoParser == false)
             {
-                codeWriter.NewLine = "\r\n";
-                ReadCode(codeWriter, "ProtocolParser", true);
-                ReadCode(codeWriter, "ProtocolParserExceptions", false);
-                ReadCode(codeWriter, "ProtocolParserKey", false);
-                ReadCode(codeWriter, "ProtocolParserVarInt", false);
+                string libPath = Path.Combine(Path.GetDirectoryName(csPath), "ProtocolParser.cs");
+                using (TextWriter codeWriter = new StreamWriter(libPath, false, Encoding.UTF8))
+                {
+                    codeWriter.NewLine = "\r\n";
+                    ReadCode(codeWriter, "ProtocolParser", true);
+                    ReadCode(codeWriter, "ProtocolParserExceptions", false);
+                    ReadCode(codeWriter, "ProtocolParserKey", false);
+                    ReadCode(codeWriter, "ProtocolParserVarInt", false);
+                }
             }
         }
 

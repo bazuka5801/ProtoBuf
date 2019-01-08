@@ -9,6 +9,13 @@ using System.Collections.Concurrent;
 // 
 namespace SilentOrbit.ProtocolBuffers
 {
+    public interface IProto
+    {
+        void ReadFromStream(Stream stream, int size);
+
+        void WriteToStream(Stream stream);
+    }
+    
     public static partial class ProtocolParser
     {
         private static byte[] staticBuffer = new byte[131072];
@@ -66,27 +73,45 @@ namespace SilentOrbit.ProtocolBuffers
             stream.Write(val, 0, val.Length);
         }
 
-        public static float ReadSingle(Stream stream)
+        public static unsafe float ReadSingle(Stream stream)
         {
             stream.Read(ProtocolParser.staticBuffer, 0, 4);
-            return ProtocolParser.staticBuffer.ReadFloat(0);
+            fixed (byte* numPointer = &staticBuffer[0])
+            {
+                return *(float*)numPointer;
+            }
         }
         
-        public static void WriteSingle(Stream stream, float f)
+        public static unsafe void WriteSingle(Stream stream, float f)
         {
-            ProtocolParser.staticBuffer.WriteFloat(f, 0);
+            byte* numPointer = (byte*)(&f);
+            ProtocolParser.staticBuffer[0] = *numPointer;
+            ProtocolParser.staticBuffer[1] = *(numPointer + 1);
+            ProtocolParser.staticBuffer[2] = *(numPointer + 2);
+            ProtocolParser.staticBuffer[3] = *(numPointer + 3);
             stream.Write(ProtocolParser.staticBuffer, 0, 4);
         }
         
-        public static double ReadDouble(Stream stream)
+        public static unsafe double ReadDouble(Stream stream)
         {
             stream.Read(ProtocolParser.staticBuffer, 0, 8);
-            return ProtocolParser.staticBuffer.ReadDouble(0);
+            fixed (byte* numPointer = &ProtocolParser.staticBuffer[0])
+            {
+                return (double)(*numPointer);
+            }
         }
         
-        public static void WriteDouble(Stream stream, double f)
+        public static unsafe void WriteDouble(Stream stream, double f)
         {
-            ProtocolParser.staticBuffer.WriteDouble(f, 0);
+            byte* numPointer = (byte*)(&f);
+            ProtocolParser.staticBuffer[0] = *numPointer;
+            ProtocolParser.staticBuffer[1] = *(numPointer + 1);
+            ProtocolParser.staticBuffer[2] = *(numPointer + 2);
+            ProtocolParser.staticBuffer[3] = *(numPointer + 3);
+            ProtocolParser.staticBuffer[4] = *(numPointer + 4);
+            ProtocolParser.staticBuffer[5] = *(numPointer + 5);
+            ProtocolParser.staticBuffer[6] = *(numPointer + 6);
+            ProtocolParser.staticBuffer[7] = *(numPointer + 7);
             stream.Write(ProtocolParser.staticBuffer, 0, 8);
         }
     }

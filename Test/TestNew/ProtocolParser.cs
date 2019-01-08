@@ -4,18 +4,23 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 
 // 
 //  Read/Write string and byte arrays 
 // 
 namespace SilentOrbit.ProtocolBuffers
 {
+    public interface IProto
+    {
+        void ReadFromStream(Stream stream, int size);
+
+        void WriteToStream(Stream stream);
+    }
+    
     public static partial class ProtocolParser
     {
         private static byte[] staticBuffer = new byte[131072];
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadString(Stream stream)
         {
             return Encoding.UTF8.GetString(ReadBytes(stream));
@@ -42,7 +47,6 @@ namespace SilentOrbit.ProtocolBuffers
             return buffer;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         /// <summary>
         /// Skip the next varint length prefixed bytes.
         /// Alternative to ReadBytes when the data is not of interest.
@@ -56,13 +60,11 @@ namespace SilentOrbit.ProtocolBuffers
                 ReadBytes(stream);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteString(Stream stream, string val)
         {
             WriteBytes(stream, Encoding.UTF8.GetBytes(val));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         /// <summary>
         /// Writes length delimited byte array
         /// </summary>
@@ -72,28 +74,24 @@ namespace SilentOrbit.ProtocolBuffers
             stream.Write(val, 0, val.Length);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ReadSingle(Stream stream)
         {
             stream.Read(ProtocolParser.staticBuffer, 0, 4);
             return ProtocolParser.staticBuffer.ReadFloat(0);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteSingle(Stream stream, float f)
         {
             ProtocolParser.staticBuffer.WriteFloat(f, 0);
             stream.Write(ProtocolParser.staticBuffer, 0, 4);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ReadDouble(Stream stream)
         {
             stream.Read(ProtocolParser.staticBuffer, 0, 8);
             return ProtocolParser.staticBuffer.ReadDouble(0);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteDouble(Stream stream, double f)
         {
             ProtocolParser.staticBuffer.WriteDouble(f, 0);
@@ -576,7 +574,6 @@ namespace SilentOrbit.ProtocolBuffers
             throw new ProtocolBufferException("Invalid boolean value");
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteBool(Stream stream, bool val)
         {
             stream.WriteByte(val ? (byte)1 : (byte)0);

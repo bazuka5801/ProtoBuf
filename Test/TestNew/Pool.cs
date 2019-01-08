@@ -6,14 +6,30 @@ namespace TestNew
 {
     public static class Pool
     {
+        public interface IPooled
+        {
+            void EnterPool();
+
+            void LeavePool();
+        }
+        
         public static Queue<MemoryStream> mss = new Queue<MemoryStream>();
         
-        public static MemoryStream Get<T>()
+        public static T Get<T>()
             where T : class, new()
         {
-            if (mss.Count > 0)
-                return mss.Dequeue();
-            else return new MemoryStream();
+            return default(T);
+        }
+        public static List<T> GetList<T>()
+            where T : class, new()
+        {
+            return new List<T>();
+        }
+
+        public static void FreeList<T>(ref List<T> list)
+        {
+            list.Clear();
+            list = null;
         }
 
         public static void Free<T>(ref T t)
@@ -25,10 +41,6 @@ namespace TestNew
         {
             ms.SetLength(0);
             mss.Enqueue(ms);
-        }
-
-        public static void FreeList<T>(ref List<T> obj)
-        {
         }
     }
 }

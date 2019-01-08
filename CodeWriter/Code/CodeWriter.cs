@@ -174,13 +174,20 @@ namespace SilentOrbit.Code
             Indent();
         }
 
+        public void ForBracket(string str)
+        {
+            WriteLine("for (" + str + ")");
+            WriteLine("{");
+            Indent();
+        }
+        
         public void ForeachBracket(string str)
         {
             WriteLine("foreach (" + str + ")");
             WriteLine("{");
             Indent();
         }
-
+        
         public void EndBracket()
         {
             Dedent();
@@ -202,18 +209,13 @@ namespace SilentOrbit.Code
             WriteLine(IndentPrefix + str);
         }
 
-        public void WriteLine(string line)
+        public void WriteLine(string line = "")
         {
             foreach (string l in SplitTrimEnd(line))
             {
                 string pl = (prefix + l).TrimEnd(' ', '\t');
                 w.Write(pl + NewLine);
             }
-        }
-
-        public void WriteLine()
-        {
-            WriteLine("");
         }
 
         #region Comments

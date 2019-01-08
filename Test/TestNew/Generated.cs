@@ -10,6 +10,7 @@
 // then write the code and the changes in a separate file.
 using System;
 using System.Collections.Generic;
+using SilentOrbit.ProtocolBuffers;
 using TestNew;
 
 namespace UnityEngine
@@ -20,7 +21,21 @@ namespace UnityEngine
 }
 namespace Despunch.Data
 {
-    public partial class InputState
+    public partial class Link : IDisposable, Pool.IPooled, IProto
+    {
+        public UnityEngine.Vector3 pos;
+
+    }
+
+    public partial class Building : IDisposable, Pool.IPooled, IProto
+    {
+        public List<Despunch.Data.Link> links;
+
+        public UnityEngine.Vector3 pos;
+
+    }
+
+    public partial class InputState : IDisposable, Pool.IPooled, IProto
     {
         public int buttons;
 

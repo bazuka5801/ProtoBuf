@@ -16,6 +16,7 @@ namespace UnityEngine
 {
     public static class Vector3Serializer
     {
+        #region [Methods] Reader
         /// <summary>Helper: create a new instance to deserializing into</summary>
         public static Vector3 Deserialize(Stream stream)
         {
@@ -44,16 +45,22 @@ namespace UnityEngine
         public static Vector3 Deserialize(byte[] buffer)
         {
             Vector3 instance = new Vector3();
-            using (var ms = new MemoryStream(buffer))
-                Deserialize(ms, ref instance);
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, ref instance);
+            Pool.FreeMemoryStream(ref ms);
             return instance;
         }
 
         /// <summary>Helper: put the buffer into a MemoryStream before deserializing</summary>
         public static UnityEngine.Vector3 Deserialize(byte[] buffer, ref UnityEngine.Vector3 instance)
         {
-            using (var ms = new MemoryStream(buffer))
-                Deserialize(ms, ref instance);
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, ref instance);
+            Pool.FreeMemoryStream(ref ms);
             return instance;
         }
 
@@ -197,6 +204,8 @@ namespace UnityEngine
             return instance;
         }
 
+        #endregion
+        #region [Methods] Writer
         /// <summary>Serialize the instance into the stream</summary>
         public static void Serialize(Stream stream, Vector3 instance)
         {
@@ -216,11 +225,11 @@ namespace UnityEngine
         /// <summary>Helper: Serialize into a MemoryStream and return its byte array</summary>
         public static byte[] SerializeToBytes(Vector3 instance)
         {
-            using (var ms = new MemoryStream())
-            {
-                Serialize(ms, instance);
-                return ms.ToArray();
-            }
+            var ms = Pool.Get<MemoryStream>();
+            Serialize(ms, instance);
+            var arr = ms.ToArray();
+            Pool.FreeMemoryStream(ref ms);
+            return arr;
         }
         /// <summary>Helper: Serialize with a varint length prefix</summary>
         public static void SerializeLengthDelimited(Stream stream, Vector3 instance)
@@ -229,17 +238,723 @@ namespace UnityEngine
             global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, (uint)data.Length);
             stream.Write(data, 0, data.Length);
         }
+
+        public static void SerializeDelta(Stream stream, Vector3 instance, Vector3 previous)
+        {
+            var msField = Pool.Get<MemoryStream>();
+            if (instance.x != previous.x)
+            {
+                // Key for field: 1, Fixed32
+                stream.WriteByte(13);
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteSingle(stream, instance.x);
+            }
+            if (instance.y != previous.y)
+            {
+                // Key for field: 2, Fixed32
+                stream.WriteByte(21);
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteSingle(stream, instance.y);
+            }
+            if (instance.z != previous.z)
+            {
+                // Key for field: 3, Fixed32
+                stream.WriteByte(29);
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteSingle(stream, instance.z);
+            }
+            Pool.FreeMemoryStream(ref msField);
+        }
+        #endregion
     }
 
 }
 namespace Despunch.Data
 {
+    public partial class Link
+    {
+        #region [Methods] Pooled
+        private bool _disposed;
+        public bool ShouldPool = true;
+
+        public virtual void Dispose()
+        {
+            if (this._disposed)
+                return;
+            this.ResetToPool();
+            this._disposed = true;
+        }
+
+        public void ResetToPool()
+        {
+            ResetToPool(this);
+        }
+
+        public static void ResetToPool(Link instance)
+        {
+            if (!instance.ShouldPool)
+                return;
+            // [Vector3] pos
+            UnityEngine.Vector3 defVector3 = new UnityEngine.Vector3();
+            instance.pos = defVector3;
+
+            Pool.Free<Despunch.Data.Link>(ref instance);
+        }
+
+        public virtual void EnterPool()
+        {
+            this._disposed = true;
+        }
+
+        public virtual void LeavePool()
+        {
+            this._disposed = false;
+        }
+
+        #endregion
+        #region [Methods] Reader
+        public void ReadFromStream(Stream stream, int size)
+        {
+            DeserializeLength(stream, size, this);
+        }
+
+        /// <summary>Helper: create a new instance to deserializing into</summary>
+        public static Link Deserialize(Stream stream)
+        {
+            Link instance = Pool.Get<Link>();
+            Deserialize(stream, instance);
+            return instance;
+        }
+
+        /// <summary>Helper: create a new instance to deserializing into</summary>
+        public static Link DeserializeLengthDelimited(Stream stream)
+        {
+            Link instance = Pool.Get<Link>();
+            DeserializeLengthDelimited(stream, instance);
+            return instance;
+        }
+
+        /// <summary>Helper: create a new instance to deserializing into</summary>
+        public static Link DeserializeLength(Stream stream, int length)
+        {
+            Link instance = Pool.Get<Link>();
+            DeserializeLength(stream, length, instance);
+            return instance;
+        }
+
+        /// <summary>Helper: put the buffer into a MemoryStream and create a new instance to deserializing into</summary>
+        public static Link Deserialize(byte[] buffer)
+        {
+            Link instance = Pool.Get<Link>();
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, instance);
+            Pool.FreeMemoryStream(ref ms);
+            return instance;
+        }
+
+        /// <summary>Helper: put the buffer into a MemoryStream before deserializing</summary>
+        public static Despunch.Data.Link Deserialize(byte[] buffer, Despunch.Data.Link instance)
+        {
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, instance);
+            Pool.FreeMemoryStream(ref ms);
+            return instance;
+        }
+
+        /// <summary>Takes the remaining content of the stream and deserialze it into the instance.</summary>
+        public static Despunch.Data.Link Deserialize(Stream stream, Despunch.Data.Link instance)
+        {
+            while (true)
+            {
+                int keyByte = stream.ReadByte();
+                if (keyByte == -1)
+                    break;
+                // Optimized reading of known fields with field ID < 16
+                switch (keyByte)
+                {
+                    // Field 1 LengthDelimited
+                    case 10:
+                        UnityEngine.Vector3Serializer.DeserializeLengthDelimited(stream, ref instance.pos);
+                        continue;
+                }
+
+                var key = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadKey((byte)keyByte, stream);
+
+                // Reading field ID > 16 and unknown field ID/wire type combinations
+                switch (key.Field)
+                {
+                    case 0:
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Invalid field id: 0, something went wrong in the stream");
+                    default:
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.SkipKey(stream, key);
+                        break;
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>Read the VarInt length prefix and the given number of bytes from the stream and deserialze it into the instance.</summary>
+        public static Despunch.Data.Link DeserializeLengthDelimited(Stream stream, Despunch.Data.Link instance)
+        {
+            long limit = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadUInt32(stream);
+            limit += stream.Position;
+            while (true)
+            {
+                if (stream.Position >= limit)
+                {
+                    if (stream.Position == limit)
+                        break;
+                    else
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Read past max limit");
+                }
+                int keyByte = stream.ReadByte();
+                if (keyByte == -1)
+                    throw new System.IO.EndOfStreamException();
+                // Optimized reading of known fields with field ID < 16
+                switch (keyByte)
+                {
+                    // Field 1 LengthDelimited
+                    case 10:
+                        UnityEngine.Vector3Serializer.DeserializeLengthDelimited(stream, ref instance.pos);
+                        continue;
+                }
+
+                var key = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadKey((byte)keyByte, stream);
+
+                // Reading field ID > 16 and unknown field ID/wire type combinations
+                switch (key.Field)
+                {
+                    case 0:
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Invalid field id: 0, something went wrong in the stream");
+                    default:
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.SkipKey(stream, key);
+                        break;
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>Read the given number of bytes from the stream and deserialze it into the instance.</summary>
+        public static Despunch.Data.Link DeserializeLength(Stream stream, int length, Despunch.Data.Link instance)
+        {
+            long limit = stream.Position + length;
+            while (true)
+            {
+                if (stream.Position >= limit)
+                {
+                    if (stream.Position == limit)
+                        break;
+                    else
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Read past max limit");
+                }
+                int keyByte = stream.ReadByte();
+                if (keyByte == -1)
+                    throw new System.IO.EndOfStreamException();
+                // Optimized reading of known fields with field ID < 16
+                switch (keyByte)
+                {
+                    // Field 1 LengthDelimited
+                    case 10:
+                        UnityEngine.Vector3Serializer.DeserializeLengthDelimited(stream, ref instance.pos);
+                        continue;
+                }
+
+                var key = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadKey((byte)keyByte, stream);
+
+                // Reading field ID > 16 and unknown field ID/wire type combinations
+                switch (key.Field)
+                {
+                    case 0:
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Invalid field id: 0, something went wrong in the stream");
+                    default:
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.SkipKey(stream, key);
+                        break;
+                }
+            }
+
+            return instance;
+        }
+
+        #endregion
+        #region [Methods] Writer
+        /// <summary>Serialize the instance into the stream</summary>
+        public static void Serialize(Stream stream, Link instance)
+        {
+            var msField = Pool.Get<MemoryStream>();
+            // Key for field: 1, LengthDelimited
+            stream.WriteByte(10);
+            ﻿msField.SetLength(0);
+            UnityEngine.Vector3Serializer.Serialize(msField, instance.pos);
+            // Length delimited byte array
+            uint length1 = (uint)msField.Length;
+            global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length1);
+            stream.Write(msField.GetBuffer(), 0, (int)length1);
+
+            Pool.FreeMemoryStream(ref msField);
+        }
+
+        /// <summary>Helper: Serialize into a MemoryStream and return its byte array</summary>
+        public static byte[] SerializeToBytes(Link instance)
+        {
+            var ms = Pool.Get<MemoryStream>();
+            Serialize(ms, instance);
+            var arr = ms.ToArray();
+            Pool.FreeMemoryStream(ref ms);
+            return arr;
+        }
+        /// <summary>Helper: Serialize with a varint length prefix</summary>
+        public static void SerializeLengthDelimited(Stream stream, Link instance)
+        {
+            var data = SerializeToBytes(instance);
+            global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, (uint)data.Length);
+            stream.Write(data, 0, data.Length);
+        }
+
+        public static void SerializeDelta(Stream stream, Link instance, Link previous)
+        {
+            var msField = Pool.Get<MemoryStream>();
+            if (instance.pos != previous.pos)
+            {
+                // Key for field: 1, LengthDelimited
+                stream.WriteByte(10);
+                ﻿msField.SetLength(0);
+                UnityEngine.Vector3Serializer.SerializeDelta(msField, instance.pos, previous.pos);
+                // Length delimited byte array
+                uint length1 = (uint)msField.Length;
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length1);
+                stream.Write(msField.GetBuffer(), 0, (int)length1);
+
+            }
+            Pool.FreeMemoryStream(ref msField);
+        }
+        public void WriteToStream(Stream stream)
+        {
+            Serialize(stream, this);
+        }
+        public void WriteToStreamDelta(Stream stream, Link previous)
+        {
+            if (previous != null)
+            {
+                SerializeDelta(stream, this, previous);
+            }
+            else
+            {
+                Serialize(stream, this);
+            }
+        }
+        #endregion
+    }
+
+    public partial class Building
+    {
+        #region [Methods] Pooled
+        private bool _disposed;
+        public bool ShouldPool = true;
+
+        public virtual void Dispose()
+        {
+            if (this._disposed)
+                return;
+            this.ResetToPool();
+            this._disposed = true;
+        }
+
+        public void ResetToPool()
+        {
+            ResetToPool(this);
+        }
+
+        public static void ResetToPool(Building instance)
+        {
+            if (!instance.ShouldPool)
+                return;
+            // [Link] links
+            if (instance.links != null)
+            {
+                for (int i = 0; i < instance.links.Count; i++)
+                {
+                    if (instance.links[i] != null)
+                    {
+                        instance.links[i].ResetToPool();
+                        instance.links[i] = null;
+                    }
+                }
+                List<Despunch.Data.Link> inslinks = instance.links;
+                Pool.FreeList<Despunch.Data.Link>(ref inslinks);
+                instance.links = inslinks;
+            }
+
+            // [Vector3] pos
+            UnityEngine.Vector3 defVector3 = new UnityEngine.Vector3();
+            instance.pos = defVector3;
+
+            Pool.Free<Despunch.Data.Building>(ref instance);
+        }
+
+        public virtual void EnterPool()
+        {
+            this._disposed = true;
+        }
+
+        public virtual void LeavePool()
+        {
+            this._disposed = false;
+        }
+
+        #endregion
+        #region [Methods] Reader
+        public void ReadFromStream(Stream stream, int size)
+        {
+            DeserializeLength(stream, size, this);
+        }
+
+        /// <summary>Helper: create a new instance to deserializing into</summary>
+        public static Building Deserialize(Stream stream)
+        {
+            Building instance = Pool.Get<Building>();
+            Deserialize(stream, instance);
+            return instance;
+        }
+
+        /// <summary>Helper: create a new instance to deserializing into</summary>
+        public static Building DeserializeLengthDelimited(Stream stream)
+        {
+            Building instance = Pool.Get<Building>();
+            DeserializeLengthDelimited(stream, instance);
+            return instance;
+        }
+
+        /// <summary>Helper: create a new instance to deserializing into</summary>
+        public static Building DeserializeLength(Stream stream, int length)
+        {
+            Building instance = Pool.Get<Building>();
+            DeserializeLength(stream, length, instance);
+            return instance;
+        }
+
+        /// <summary>Helper: put the buffer into a MemoryStream and create a new instance to deserializing into</summary>
+        public static Building Deserialize(byte[] buffer)
+        {
+            Building instance = Pool.Get<Building>();
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, instance);
+            Pool.FreeMemoryStream(ref ms);
+            return instance;
+        }
+
+        /// <summary>Helper: put the buffer into a MemoryStream before deserializing</summary>
+        public static Despunch.Data.Building Deserialize(byte[] buffer, Despunch.Data.Building instance)
+        {
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, instance);
+            Pool.FreeMemoryStream(ref ms);
+            return instance;
+        }
+
+        /// <summary>Takes the remaining content of the stream and deserialze it into the instance.</summary>
+        public static Despunch.Data.Building Deserialize(Stream stream, Despunch.Data.Building instance)
+        {
+            if (instance.links == null)
+                instance.links = Pool.GetList<Despunch.Data.Link>();
+            while (true)
+            {
+                int keyByte = stream.ReadByte();
+                if (keyByte == -1)
+                    break;
+                // Optimized reading of known fields with field ID < 16
+                switch (keyByte)
+                {
+                    // Field 1 LengthDelimited
+                    case 10:
+                        // repeated
+                        instance.links.Add(Despunch.Data.Link.DeserializeLengthDelimited(stream));
+                        continue;
+                    // Field 2 LengthDelimited
+                    case 18:
+                        UnityEngine.Vector3Serializer.DeserializeLengthDelimited(stream, ref instance.pos);
+                        continue;
+                }
+
+                var key = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadKey((byte)keyByte, stream);
+
+                // Reading field ID > 16 and unknown field ID/wire type combinations
+                switch (key.Field)
+                {
+                    case 0:
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Invalid field id: 0, something went wrong in the stream");
+                    default:
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.SkipKey(stream, key);
+                        break;
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>Read the VarInt length prefix and the given number of bytes from the stream and deserialze it into the instance.</summary>
+        public static Despunch.Data.Building DeserializeLengthDelimited(Stream stream, Despunch.Data.Building instance)
+        {
+            if (instance.links == null)
+                instance.links = Pool.GetList<Despunch.Data.Link>();
+            long limit = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadUInt32(stream);
+            limit += stream.Position;
+            while (true)
+            {
+                if (stream.Position >= limit)
+                {
+                    if (stream.Position == limit)
+                        break;
+                    else
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Read past max limit");
+                }
+                int keyByte = stream.ReadByte();
+                if (keyByte == -1)
+                    throw new System.IO.EndOfStreamException();
+                // Optimized reading of known fields with field ID < 16
+                switch (keyByte)
+                {
+                    // Field 1 LengthDelimited
+                    case 10:
+                        // repeated
+                        instance.links.Add(Despunch.Data.Link.DeserializeLengthDelimited(stream));
+                        continue;
+                    // Field 2 LengthDelimited
+                    case 18:
+                        UnityEngine.Vector3Serializer.DeserializeLengthDelimited(stream, ref instance.pos);
+                        continue;
+                }
+
+                var key = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadKey((byte)keyByte, stream);
+
+                // Reading field ID > 16 and unknown field ID/wire type combinations
+                switch (key.Field)
+                {
+                    case 0:
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Invalid field id: 0, something went wrong in the stream");
+                    default:
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.SkipKey(stream, key);
+                        break;
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>Read the given number of bytes from the stream and deserialze it into the instance.</summary>
+        public static Despunch.Data.Building DeserializeLength(Stream stream, int length, Despunch.Data.Building instance)
+        {
+            if (instance.links == null)
+                instance.links = Pool.GetList<Despunch.Data.Link>();
+            long limit = stream.Position + length;
+            while (true)
+            {
+                if (stream.Position >= limit)
+                {
+                    if (stream.Position == limit)
+                        break;
+                    else
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Read past max limit");
+                }
+                int keyByte = stream.ReadByte();
+                if (keyByte == -1)
+                    throw new System.IO.EndOfStreamException();
+                // Optimized reading of known fields with field ID < 16
+                switch (keyByte)
+                {
+                    // Field 1 LengthDelimited
+                    case 10:
+                        // repeated
+                        instance.links.Add(Despunch.Data.Link.DeserializeLengthDelimited(stream));
+                        continue;
+                    // Field 2 LengthDelimited
+                    case 18:
+                        UnityEngine.Vector3Serializer.DeserializeLengthDelimited(stream, ref instance.pos);
+                        continue;
+                }
+
+                var key = global::SilentOrbit.ProtocolBuffers.ProtocolParser.ReadKey((byte)keyByte, stream);
+
+                // Reading field ID > 16 and unknown field ID/wire type combinations
+                switch (key.Field)
+                {
+                    case 0:
+                        throw new global::SilentOrbit.ProtocolBuffers.ProtocolBufferException("Invalid field id: 0, something went wrong in the stream");
+                    default:
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.SkipKey(stream, key);
+                        break;
+                }
+            }
+
+            return instance;
+        }
+
+        #endregion
+        #region [Methods] Writer
+        /// <summary>Serialize the instance into the stream</summary>
+        public static void Serialize(Stream stream, Building instance)
+        {
+            var msField = Pool.Get<MemoryStream>();
+            if (instance.links != null)
+            {
+                foreach (var i1 in instance.links)
+                {
+                    // Key for field: 1, LengthDelimited
+                    stream.WriteByte(10);
+                    ﻿msField.SetLength(0);
+                    Despunch.Data.Link.Serialize(msField, i1);
+                    // Length delimited byte array
+                    uint length1 = (uint)msField.Length;
+                    global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length1);
+                    stream.Write(msField.GetBuffer(), 0, (int)length1);
+
+                }
+            }
+            // Key for field: 2, LengthDelimited
+            stream.WriteByte(18);
+            ﻿msField.SetLength(0);
+            UnityEngine.Vector3Serializer.Serialize(msField, instance.pos);
+            // Length delimited byte array
+            uint length2 = (uint)msField.Length;
+            global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length2);
+            stream.Write(msField.GetBuffer(), 0, (int)length2);
+
+            Pool.FreeMemoryStream(ref msField);
+        }
+
+        /// <summary>Helper: Serialize into a MemoryStream and return its byte array</summary>
+        public static byte[] SerializeToBytes(Building instance)
+        {
+            var ms = Pool.Get<MemoryStream>();
+            Serialize(ms, instance);
+            var arr = ms.ToArray();
+            Pool.FreeMemoryStream(ref ms);
+            return arr;
+        }
+        /// <summary>Helper: Serialize with a varint length prefix</summary>
+        public static void SerializeLengthDelimited(Stream stream, Building instance)
+        {
+            var data = SerializeToBytes(instance);
+            global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, (uint)data.Length);
+            stream.Write(data, 0, data.Length);
+        }
+
+        public static void SerializeDelta(Stream stream, Building instance, Building previous)
+        {
+            var msField = Pool.Get<MemoryStream>();
+            if (instance.links != previous.links)
+            {
+                if (instance.links != null)
+                {
+                    foreach (var i1 in instance.links)
+                    {
+                        // Key for field: 1, LengthDelimited
+                        stream.WriteByte(10);
+                        ﻿msField.SetLength(0);
+                        Despunch.Data.Link.Serialize(msField, i1);
+                        // Length delimited byte array
+                        uint length1 = (uint)msField.Length;
+                        global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length1);
+                        stream.Write(msField.GetBuffer(), 0, (int)length1);
+
+                    }
+                }
+            }
+            if (instance.pos != previous.pos)
+            {
+                // Key for field: 2, LengthDelimited
+                stream.WriteByte(18);
+                ﻿msField.SetLength(0);
+                UnityEngine.Vector3Serializer.SerializeDelta(msField, instance.pos, previous.pos);
+                // Length delimited byte array
+                uint length2 = (uint)msField.Length;
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length2);
+                stream.Write(msField.GetBuffer(), 0, (int)length2);
+
+            }
+            Pool.FreeMemoryStream(ref msField);
+        }
+        public void WriteToStream(Stream stream)
+        {
+            Serialize(stream, this);
+        }
+        public void WriteToStreamDelta(Stream stream, Building previous)
+        {
+            if (previous != null)
+            {
+                SerializeDelta(stream, this, previous);
+            }
+            else
+            {
+                Serialize(stream, this);
+            }
+        }
+        #endregion
+    }
+
     public partial class InputState
     {
+        #region [Methods] Pooled
+        private bool _disposed;
+        public bool ShouldPool = true;
+
+        public virtual void Dispose()
+        {
+            if (this._disposed)
+                return;
+            this.ResetToPool();
+            this._disposed = true;
+        }
+
+        public void ResetToPool()
+        {
+            ResetToPool(this);
+        }
+
+        public static void ResetToPool(InputState instance)
+        {
+            if (!instance.ShouldPool)
+                return;
+            // [int] buttons
+            instance.buttons = default(int);
+
+            // [Vector3] aimAngles
+            UnityEngine.Vector3 defVector3 = new UnityEngine.Vector3();
+            instance.aimAngles = defVector3;
+
+            // [Vector3] mouseDelta
+            instance.mouseDelta = defVector3;
+
+            Pool.Free<Despunch.Data.InputState>(ref instance);
+        }
+
+        public virtual void EnterPool()
+        {
+            this._disposed = true;
+        }
+
+        public virtual void LeavePool()
+        {
+            this._disposed = false;
+        }
+
+        #endregion
+        #region [Methods] Reader
+        public void ReadFromStream(Stream stream, int size)
+        {
+            DeserializeLength(stream, size, this);
+        }
+
         /// <summary>Helper: create a new instance to deserializing into</summary>
         public static InputState Deserialize(Stream stream)
         {
-            InputState instance = new InputState();
+            InputState instance = Pool.Get<InputState>();
             Deserialize(stream, instance);
             return instance;
         }
@@ -247,7 +962,7 @@ namespace Despunch.Data
         /// <summary>Helper: create a new instance to deserializing into</summary>
         public static InputState DeserializeLengthDelimited(Stream stream)
         {
-            InputState instance = new InputState();
+            InputState instance = Pool.Get<InputState>();
             DeserializeLengthDelimited(stream, instance);
             return instance;
         }
@@ -255,7 +970,7 @@ namespace Despunch.Data
         /// <summary>Helper: create a new instance to deserializing into</summary>
         public static InputState DeserializeLength(Stream stream, int length)
         {
-            InputState instance = new InputState();
+            InputState instance = Pool.Get<InputState>();
             DeserializeLength(stream, length, instance);
             return instance;
         }
@@ -263,17 +978,23 @@ namespace Despunch.Data
         /// <summary>Helper: put the buffer into a MemoryStream and create a new instance to deserializing into</summary>
         public static InputState Deserialize(byte[] buffer)
         {
-            InputState instance = new InputState();
-            using (var ms = new MemoryStream(buffer))
-                Deserialize(ms, instance);
+            InputState instance = Pool.Get<InputState>();
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, instance);
+            Pool.FreeMemoryStream(ref ms);
             return instance;
         }
 
         /// <summary>Helper: put the buffer into a MemoryStream before deserializing</summary>
         public static Despunch.Data.InputState Deserialize(byte[] buffer, Despunch.Data.InputState instance)
         {
-            using (var ms = new MemoryStream(buffer))
-                Deserialize(ms, instance);
+            var ms = Pool.Get<MemoryStream>();
+            ms.Write(buffer, 0 ,buffer.Length);
+            ms.Position = 0;
+            Deserialize(ms, instance);
+            Pool.FreeMemoryStream(ref ms);
             return instance;
         }
 
@@ -417,6 +1138,8 @@ namespace Despunch.Data
             return instance;
         }
 
+        #endregion
+        #region [Methods] Writer
         /// <summary>Serialize the instance into the stream</summary>
         public static void Serialize(Stream stream, InputState instance)
         {
@@ -448,11 +1171,11 @@ namespace Despunch.Data
         /// <summary>Helper: Serialize into a MemoryStream and return its byte array</summary>
         public static byte[] SerializeToBytes(InputState instance)
         {
-            using (var ms = new MemoryStream())
-            {
-                Serialize(ms, instance);
-                return ms.ToArray();
-            }
+            var ms = Pool.Get<MemoryStream>();
+            Serialize(ms, instance);
+            var arr = ms.ToArray();
+            Pool.FreeMemoryStream(ref ms);
+            return arr;
         }
         /// <summary>Helper: Serialize with a varint length prefix</summary>
         public static void SerializeLengthDelimited(Stream stream, InputState instance)
@@ -461,6 +1184,58 @@ namespace Despunch.Data
             global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, (uint)data.Length);
             stream.Write(data, 0, data.Length);
         }
+
+        public static void SerializeDelta(Stream stream, InputState instance, InputState previous)
+        {
+            var msField = Pool.Get<MemoryStream>();
+            if (instance.buttons != previous.buttons)
+            {
+                // Key for field: 1, Varint
+                stream.WriteByte(8);
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt64(stream,(ulong)instance.buttons);
+            }
+            if (instance.aimAngles != previous.aimAngles)
+            {
+                // Key for field: 2, LengthDelimited
+                stream.WriteByte(18);
+                ﻿msField.SetLength(0);
+                UnityEngine.Vector3Serializer.SerializeDelta(msField, instance.aimAngles, previous.aimAngles);
+                // Length delimited byte array
+                uint length2 = (uint)msField.Length;
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length2);
+                stream.Write(msField.GetBuffer(), 0, (int)length2);
+
+            }
+            if (instance.mouseDelta != previous.mouseDelta)
+            {
+                // Key for field: 3, LengthDelimited
+                stream.WriteByte(26);
+                ﻿msField.SetLength(0);
+                UnityEngine.Vector3Serializer.SerializeDelta(msField, instance.mouseDelta, previous.mouseDelta);
+                // Length delimited byte array
+                uint length3 = (uint)msField.Length;
+                global::SilentOrbit.ProtocolBuffers.ProtocolParser.WriteUInt32(stream, length3);
+                stream.Write(msField.GetBuffer(), 0, (int)length3);
+
+            }
+            Pool.FreeMemoryStream(ref msField);
+        }
+        public void WriteToStream(Stream stream)
+        {
+            Serialize(stream, this);
+        }
+        public void WriteToStreamDelta(Stream stream, InputState previous)
+        {
+            if (previous != null)
+            {
+                SerializeDelta(stream, this, previous);
+            }
+            else
+            {
+                Serialize(stream, this);
+            }
+        }
+        #endregion
     }
 
 }
